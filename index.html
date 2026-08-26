@@ -2,20 +2,22 @@
 <html lang="hr">
 <head>
     <meta charset="UTF-8">
-    <title>AI Glasovni Asistent - Microsoft Edge Neural</title>
+    <title>AI Glasovni Asistent</title>
 </head>
 <body>
 
-    <h2>AI Asistent sa Microsoft Edge Glasom</h2>
-    <textarea id="tekstZaGovor" rows="4" cols="50">Zdravo! Ja koristim pravi Microsoft Edge neuralni glas, zvučim potpuno prirodno i fluidno.</textarea>
+    <h2>AI Glasovni Asistent (Microsoft Edge Neural)</h2>
+    <textarea id="korisnickiTekst" rows="4" cols="50">Reci mi nešto o vještačkoj inteligenciji u jednoj rečenici.</textarea>
     <br>
-    <button onclick="generisiIProsvirajGlas()">Govori</button>
-    <audio id="audioPler" controls style="margin-top: 10px; display: block;"></audio>
+    <button onclick="posaljiAsistentu()">Pošalji i poslušaj</button>
+    
+    <!-- Skriveni ili vidljivi audio plejer -->
+    <audio id="audioPlejer" controls style="display:block; margin-top:15px;"></audio>
 
     <script>
-        async function generisiIProsvirajGlas() {
-            const tekst = document.getElementById("tekstZaGovor").value;
-            const audioPler = document.getElementById("audioPler");
+        async function posaljiAsistentu() {
+            const tekst = document.getElementById("korisnickiTekst").value;
+            const plejer = document.getElementById("audioPlejer");
 
             if (!tekst.trim()) {
                 alert("Unesi neki tekst!");
@@ -23,30 +25,33 @@
             }
 
             try {
-                console.log("Generišem Microsoft Edge glas...");
-                
-                // Koristimo besplatni javni proxy/api za edge-tts koji vraća audio stream
-                // Možeš prilagoditi glas u URL-u (npr. hr-HR-GabrijelaNeural, sr-RS-SophieNeural, bs-BA-VesnaNeural)
-                const glas = "hr-HR-GabrijelaNeural";
-                const encodedText = encodeURIComponent(tekst);
-                
-                // Primjer poziva na javni edge-tts servis (ili tvoj Supabase/Node backend ako ga tu smjestiš)
-                const response = await fetch(`https://edge-tts-api.hf.space/api/tts?text=${encodedText}&voice=${glas}`);
-                
+                console.log("Šaljem zahtjev prema Supabase funkciji...");
+
+                const response = await fetch("https://lvvidixbdtjfwxxxqzr.supabase.co/functions/v1/MICROSOFT_EDGE_FUNKCIJA_IZGOVOR", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain"
+                        // Ako ti je uključena autentifikacija na Supabase-u, ovdje dodaj:
+                        // "Authorization": "Bearer TVOJ_ANON_KEY"
+                    },
+                    body: tekst
+                });
+
                 if (!response.ok) {
-                    throw new Error("Greška prilikom generisanja glasa sa servera.");
+                    const errText = await response.text();
+                    throw new Error(errText || "Greška sa servera.");
                 }
 
-                // Preuzimamo audio kao Blob (fajl u memoriji)
+                // Supabase funkcija vraća MP3 fajl (audio/mpeg)
                 const audioBlob = await response.blob();
                 const audioUrl = URL.createObjectURL(audioBlob);
 
-                // Puštamo audio preko HTML audio elementa
-                audioPler.src = audioUrl;
-                audioPler.play();
+                // Postavljamo URL u plejer i pokrećemo reprodukciju
+                plejer.src = audioUrl;
+                plejer.play();
 
             } catch (error) {
-                console.error(error);
+                console.error("Greška:", error);
                 alert("Došlo je do greške: " + error.message);
             }
         }

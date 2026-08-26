@@ -6,49 +6,42 @@
 </head>
 <body>
 
-    <h2>AI Glasovni Asistent (Microsoft Edge Neural)</h2>
-    <textarea id="korisnickiTekst" rows="4" cols="50">Reci mi nešto o vještačkoj inteligenciji u jednoj rečenici.</textarea>
+    <h2>AI Glasovni Asistent</h2>
+    <textarea id="korisnickiTekst" rows="4" cols="50">Zdravo, kako si?</textarea>
     <br>
-    <button onclick="posaljiAsistentu()">Pošalji i poslušaj</button>
-    
-    <!-- Skriveni ili vidljivi audio plejer -->
+    <button onclick="pitajAsistenta()">Pošalji</button>
     <audio id="audioPlejer" controls style="display:block; margin-top:15px;"></audio>
 
     <script>
-        async function posaljiAsistentu() {
+        async function pitajAsistenta() {
             const tekst = document.getElementById("korisnickiTekst").value;
-            const plejer = document.getElementById("audioPlejer");
-
-            if (!tekst.trim()) {
-                alert("Unesi neki tekst!");
-                return;
-            }
+            if (!tekst.trim()) return;
 
             try {
-                console.log("Šaljem zahtjev prema Supabase funkciji...");
-
+                // 1. Pozivamo našu Supabase funkciju da dobijemo pametan AI tekst
                 const response = await fetch("https://lvvidixbdtjfwxxxqzr.supabase.co/functions/v1/MICROSOFT_EDGE_FUNKCIJA_IZGOVOR", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "text/plain"
-                        // Ako ti je uključena autentifikacija na Supabase-u, ovdje dodaj:
-                        // "Authorization": "Bearer TVOJ_ANON_KEY"
-                    },
+                    headers: { "Content-Type": "text/plain" },
                     body: tekst
                 });
 
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(errText || "Greška sa servera.");
-                }
+                if (!response.ok) throw new Error("Greška sa Supabase servera");
 
-                // Supabase funkcija vraća MP3 fajl (audio/mpeg)
-                const audioBlob = await response.blob();
-                const audioUrl = URL.createObjectURL(audioBlob);
+                const aiTekst = await response.text();
+                console.log("AI Odgovor:", aiTekst);
 
-                // Postavljamo URL u plejer i pokrećemo reprodukciju
+                // 2. Puštamo stabilan govor preko pouzdanog Edge-TTS javnog streama
+                const glas = "hr-HR-GabrijelaNeural"; // Može i sr-RS-SophieNeural
+                const audioUrl = `https://edge-tts-api.hf.space/api/tts?text=${encodeURIComponent(aiTekst)}&voice=${glas}`;
+                
+                const plejer = document.getElementById("audioPlejer");
                 plejer.src = audioUrl;
-                plejer.play();
+                plejer.play().catch(() => {
+                    // Fallback ako HuggingFace zatreperi, koristi sistemski govor da nikad ne stane
+                    const utterance = new SpeechSynthesisUtterance(aiTekst);
+                    utterance.lang = 'hr-HR';
+                    window.speechSynthesis.speak(utterance);
+                });
 
             } catch (error) {
                 console.error("Greška:", error);

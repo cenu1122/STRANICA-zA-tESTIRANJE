@@ -18,11 +18,13 @@
             if (!tekst.trim()) return;
 
             try {
-                // 1. Pozivamo našu Supabase funkciju da dobijemo pametan AI tekst
+                // 1. Pozivamo našu Supabase funkciju sa ispravnim JSON formatom
                 const response = await fetch("https://lvvidixbdtjfwxxxqzr.supabase.co/functions/v1/MICROSOFT_EDGE_FUNKCIJA_IZGOVOR", {
                     method: "POST",
-                    headers: { "Content-Type": "text/plain" },
-                    body: tekst
+                    headers: { 
+                        "Content-Type": "application/json" 
+                    },
+                    body: JSON.stringify({ prompt: tekst })
                 });
 
                 if (!response.ok) throw new Error("Greška sa Supabase servera");

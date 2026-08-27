@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Glasovni asistent</title>
+  <title>Glasovni AI Asistent</title>
 
   <style>
     * {
@@ -13,6 +13,7 @@
 
     body {
       margin: 0;
+      padding: 0;
       font-family: Arial, sans-serif;
       background: #111827;
       color: white;
@@ -22,71 +23,58 @@
       align-items: center;
     }
 
-    .app {
+    .container {
       width: 100%;
-      max-width: 600px;
-      height: 90vh;
-      max-height: 800px;
-      background: #1f2937;
-      border-radius: 20px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-    }
-
-    .header {
+      max-width: 700px;
       padding: 20px;
-      text-align: center;
-      background: #111827;
-      border-bottom: 1px solid #374151;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: 22px;
-    }
-
-    .status {
-      margin-top: 8px;
-      font-size: 14px;
-      color: #9ca3af;
-    }
-
-    .messages {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .message {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 16px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-
-    .user {
-      align-self: flex-end;
-      background: #2563eb;
     }
 
     .assistant {
-      align-self: flex-start;
-      background: #374151;
+      background: #1f2937;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
     }
 
-    .controls {
-      padding: 20px;
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .status {
+      text-align: center;
+      color: #9ca3af;
+      margin-bottom: 25px;
+    }
+
+    #chat {
+      height: 350px;
+      overflow-y: auto;
       background: #111827;
-      border-top: 1px solid #374151;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
     }
 
-    .input-row {
+    .message {
+      margin-bottom: 15px;
+      padding: 12px 15px;
+      border-radius: 12px;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .user {
+      background: #374151;
+      text-align: right;
+    }
+
+    .assistant-message {
+      background: #2563eb;
+    }
+
+    .input-area {
       display: flex;
       gap: 10px;
     }
@@ -94,96 +82,95 @@
     #messageInput {
       flex: 1;
       padding: 14px;
+      border: none;
       border-radius: 12px;
-      border: 1px solid #4b5563;
-      background: #1f2937;
-      color: white;
       outline: none;
       font-size: 16px;
     }
 
     #sendButton {
-      padding: 0 20px;
       border: none;
       border-radius: 12px;
+      padding: 14px 20px;
       background: #2563eb;
       color: white;
       cursor: pointer;
       font-size: 16px;
+      font-weight: bold;
     }
 
-    .mic-row {
-      display: flex;
-      justify-content: center;
+    #sendButton:hover {
+      background: #1d4ed8;
+    }
+
+    #sendButton:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #voiceButton {
+      width: 100%;
       margin-top: 15px;
-    }
-
-    #micButton {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
+      padding: 16px;
       border: none;
-      background: #2563eb;
+      border-radius: 12px;
+      background: #059669;
       color: white;
-      font-size: 30px;
+      font-size: 17px;
+      font-weight: bold;
       cursor: pointer;
-      transition: 0.2s;
     }
 
-    #micButton:hover {
-      transform: scale(1.05);
+    #voiceButton:hover {
+      background: #047857;
     }
 
-    #micButton.listening {
-      background: #dc2626;
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(220,38,38,0.6);
-      }
-
-      70% {
-        box-shadow: 0 0 0 20px rgba(220,38,38,0);
-      }
-
-      100% {
-        box-shadow: 0 0 0 0 rgba(220,38,38,0);
-      }
-    }
-
-    .hint {
+    .info {
+      margin-top: 15px;
       text-align: center;
-      margin-top: 10px;
-      color: #9ca3af;
       font-size: 13px;
+      color: #9ca3af;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+
+      .assistant {
+        padding: 15px;
+      }
+
+      #chat {
+        height: 300px;
+      }
+
+      .input-area {
+        flex-direction: column;
+      }
+
+      #sendButton {
+        width: 100%;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="app">
+  <div class="container">
 
-    <div class="header">
-      <h1>🎙️ Glasovni asistent</h1>
-      <div class="status" id="status">
-        Spreman
-      </div>
-    </div>
+    <div class="assistant">
 
-    <div class="messages" id="messages">
+      <h1>🤖 AI Asistent</h1>
 
-      <div class="message assistant">
-        Zdravo! 👋 Pritisni mikrofon i pričaj sa mnom.
+      <div id="status" class="status">
+        Spreman sam.
       </div>
 
-    </div>
+      <div id="chat"></div>
 
-    <div class="controls">
-
-      <div class="input-row">
+      <div class="input-area">
 
         <input
           type="text"
@@ -198,16 +185,12 @@
 
       </div>
 
-      <div class="mic-row">
+      <button id="voiceButton">
+        🔊 Testiraj glas
+      </button>
 
-        <button id="micButton">
-          🎤
-        </button>
-
-      </div>
-
-      <div class="hint">
-        Pritisni mikrofon i govori na bosanskom.
+      <div class="info">
+        Trenutno testiramo odgovor i TTS. Mikrofon dodajemo u sljedećem koraku.
       </div>
 
     </div>
@@ -217,81 +200,343 @@
 
 <script>
 
-const SUPABASE_FUNCTION =
+/*
+==================================================
+SUPABASE EDGE FUNCTION
+==================================================
+*/
+
+const SUPABASE_FUNCTION_URL =
   "https://lvvidixbdtdjfwxxxqzr.supabase.co/functions/v1/WEB_MOBILNE_APK";
 
 
-const messages = document.getElementById("messages");
-const messageInput = document.getElementById("messageInput");
-const sendButton = document.getElementById("sendButton");
-const micButton = document.getElementById("micButton");
-const statusText = document.getElementById("status");
+/*
+==================================================
+ELEMENTI STRANICE
+==================================================
+*/
+
+const messageInput =
+  document.getElementById("messageInput");
+
+const sendButton =
+  document.getElementById("sendButton");
+
+const voiceButton =
+  document.getElementById("voiceButton");
+
+const chat =
+  document.getElementById("chat");
+
+const status =
+  document.getElementById("status");
 
 
-// --------------------------------------------------
-// DODAVANJE PORUKE NA EKRAN
-// --------------------------------------------------
+/*
+==================================================
+MOBILNI UREĐAJ
+==================================================
+*/
 
-function addMessage(text, type) {
+function isMobileDevice() {
 
-  const message = document.createElement("div");
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+    .test(navigator.userAgent);
 
-  message.className = "message " + type;
-
-  message.textContent = text;
-
-  messages.appendChild(message);
-
-  messages.scrollTop = messages.scrollHeight;
 }
 
 
-// --------------------------------------------------
-// SLANJE PORUKE GROQU
-// --------------------------------------------------
+/*
+==================================================
+DODAVANJE PORUKE U CHAT
+==================================================
+*/
 
-async function sendMessage(text) {
+function addMessage(text, type) {
 
-  text = text.trim();
+  const message =
+    document.createElement("div");
 
-  if (!text) {
-    return;
+  message.classList.add("message");
+
+  if (type === "user") {
+
+    message.classList.add("user");
+
+  } else {
+
+    message.classList.add("assistant-message");
+
   }
 
-  addMessage(text, "user");
+  message.textContent = text;
 
-  messageInput.value = "";
+  chat.appendChild(message);
 
-  statusText.textContent = "Asistent razmišlja...";
+  chat.scrollTop = chat.scrollHeight;
 
-  sendButton.disabled = true;
-  micButton.disabled = true;
+}
+
+
+/*
+==================================================
+TTS
+==================================================
+*/
+
+function speakResponse(text) {
+
+  if (!("speechSynthesis" in window)) {
+
+    console.warn(
+      "Ovaj browser ne podržava Speech Synthesis."
+    );
+
+    status.textContent =
+      "TTS nije podržan u ovom browseru.";
+
+    return;
+
+  }
+
+
+  /*
+  Zaustavi prethodni govor
+  */
+
+  window.speechSynthesis.cancel();
+
+
+  /*
+  Kreiraj govor
+  */
+
+  const govor =
+    new SpeechSynthesisUtterance(text);
+
+
+  /*
+  Bosanski jezik
+  */
+
+  govor.lang = "bs-BA";
+
+
+  /*
+  Brzina
+  */
+
+  govor.rate = 1;
+
+
+  /*
+  Visina glasa
+  */
+
+  govor.pitch = 1;
+
+
+  /*
+  Jačina
+  */
+
+  govor.volume = 1;
+
+
+  /*
+  Pronađi odgovarajući glas
+  */
+
+  const voices =
+    window.speechSynthesis.getVoices();
+
+
+  const bosanskiGlas =
+    voices.find(voice => {
+
+      const lang =
+        voice.lang.toLowerCase();
+
+      return (
+        lang === "bs-ba" ||
+        lang.startsWith("bs") ||
+        lang.startsWith("hr") ||
+        lang.startsWith("sr")
+      );
+
+    });
+
+
+  if (bosanskiGlas) {
+
+    govor.voice =
+      bosanskiGlas;
+
+    console.log(
+      "Odabran glas:",
+      bosanskiGlas.name,
+      bosanskiGlas.lang
+    );
+
+  } else {
+
+    console.log(
+      "Bosanski glas nije pronađen."
+    );
+
+    console.log(
+      "Browser će koristiti zadani glas."
+    );
+
+  }
+
+
+  /*
+  Početak govora
+  */
+
+  govor.onstart = function() {
+
+    status.textContent =
+      "🔊 Asistent govori...";
+
+  };
+
+
+  /*
+  Kraj govora
+  */
+
+  govor.onend = function() {
+
+    status.textContent =
+      "Spreman sam.";
+
+  };
+
+
+  /*
+  Greška
+  */
+
+  govor.onerror = function(event) {
+
+    console.error(
+      "TTS greška:",
+      event
+    );
+
+    status.textContent =
+      "Greška kod govora.";
+
+  };
+
+
+  /*
+  Pokreni govor
+  */
+
+  window.speechSynthesis.speak(govor);
+
+}
+
+
+/*
+==================================================
+UČITAVANJE TTS GLASOVA
+==================================================
+*/
+
+if ("speechSynthesis" in window) {
+
+  window.speechSynthesis.onvoiceschanged =
+    function() {
+
+      const voices =
+        window.speechSynthesis.getVoices();
+
+      console.log(
+        "Dostupni glasovi:",
+        voices
+      );
+
+    };
+
+}
+
+
+/*
+==================================================
+SLANJE PORUKE SUPABASEU
+==================================================
+*/
+
+async function sendMessage(message) {
 
   try {
 
-    const response = await fetch(
-      SUPABASE_FUNCTION,
-      {
-        method: "POST",
+    status.textContent =
+      "⏳ Razmišljam...";
 
-        headers: {
-          "Content-Type": "application/json"
-        },
+    sendButton.disabled = true;
 
-        body: JSON.stringify({
-          message: text
-        })
-      }
+
+    /*
+    Prikaži korisnikovu poruku
+    */
+
+    addMessage(
+      message,
+      "user"
     );
 
 
-    const data = await response.json();
+    /*
+    Pošalji poruku Supabase funkciji
+    */
+
+    const response =
+      await fetch(
+        SUPABASE_FUNCTION_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+            message: message
+          })
+        }
+      );
 
 
-    console.log("Supabase odgovor:", data);
+    /*
+    Pročitaj odgovor
+    */
 
+    const data =
+      await response.json();
+
+
+    console.log(
+      "Supabase odgovor:",
+      data
+    );
+
+
+    /*
+    Ako server vrati grešku
+    */
 
     if (!response.ok) {
+
+      console.error(
+        "Greška servera:",
+        data
+      );
 
       throw new Error(
         data.error ||
@@ -301,14 +546,22 @@ async function sendMessage(text) {
     }
 
 
+    /*
+    Provjeri postoji li odgovor
+    */
+
     if (!data.reply) {
 
       throw new Error(
-        "Server nije vratio odgovor."
+        "Asistent nije vratio odgovor."
       );
 
     }
 
+
+    /*
+    Prikaži odgovor
+    */
 
     addMessage(
       data.reply,
@@ -316,205 +569,152 @@ async function sendMessage(text) {
     );
 
 
-    statusText.textContent =
-      "Spreman";
+    /*
+    GOVOR
+    */
+
+    speakResponse(
+      data.reply
+    );
+
+
+    status.textContent =
+      "Spreman sam.";
+
+
+    return data.reply;
 
 
   } catch (error) {
 
-    console.error(error);
-
-    addMessage(
-      "Greška: " + error.message,
-      "assistant"
+    console.error(
+      "sendMessage greška:",
+      error
     );
 
-    statusText.textContent =
-      "Greška";
+
+    status.textContent =
+      "❌ Greška.";
+
+
+    addMessage(
+      "Došlo je do greške: " +
+      error.message,
+      "assistant"
+    );
 
 
   } finally {
 
     sendButton.disabled = false;
-    micButton.disabled = false;
 
   }
+
 }
 
 
-// --------------------------------------------------
-// DUGME POŠALJI
-// --------------------------------------------------
+/*
+==================================================
+DUGME POŠALJI
+==================================================
+*/
 
 sendButton.addEventListener(
   "click",
-  () => {
+  function() {
 
-    sendMessage(
-      messageInput.value
-    );
-
-  }
-);
+    const message =
+      messageInput.value.trim();
 
 
-// --------------------------------------------------
-// ENTER ZA SLANJE
-// --------------------------------------------------
-
-messageInput.addEventListener(
-  "keydown",
-  (event) => {
-
-    if (event.key === "Enter") {
-
-      sendMessage(
-        messageInput.value
-      );
-
-    }
-
-  }
-);
-
-
-// --------------------------------------------------
-// SPEECH RECOGNITION
-// --------------------------------------------------
-
-const SpeechRecognition =
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
-
-
-let recognition = null;
-
-
-if (SpeechRecognition) {
-
-  recognition =
-    new SpeechRecognition();
-
-
-  recognition.lang =
-    "bs-BA";
-
-
-  recognition.continuous =
-    false;
-
-
-  recognition.interimResults =
-    false;
-
-
-  recognition.onstart = () => {
-
-    micButton.classList.add(
-      "listening"
-    );
-
-    statusText.textContent =
-      "Slušam... 🎤";
-
-  };
-
-
-  recognition.onresult =
-    (event) => {
-
-      const text =
-        event.results[0][0].transcript;
-
-      console.log(
-        "Prepoznato:",
-        text
-      );
-
-      messageInput.value =
-        text;
-
-      sendMessage(text);
-
-    };
-
-
-  recognition.onerror =
-    (event) => {
-
-      console.error(
-        "Speech recognition error:",
-        event.error
-      );
-
-      statusText.textContent =
-        "Greška mikrofona";
-
-    };
-
-
-  recognition.onend =
-    () => {
-
-      micButton.classList.remove(
-        "listening"
-      );
-
-      if (
-        statusText.textContent ===
-        "Slušam... 🎤"
-      ) {
-
-        statusText.textContent =
-          "Spreman";
-
-      }
-
-    };
-
-
-} else {
-
-  micButton.disabled = true;
-
-  statusText.textContent =
-    "Browser ne podržava mikrofon";
-
-}
-
-
-// --------------------------------------------------
-// DUGME MIKROFON
-// --------------------------------------------------
-
-micButton.addEventListener(
-  "click",
-  () => {
-
-    if (!recognition) {
-
-      alert(
-        "Ovaj browser ne podržava prepoznavanje govora."
-      );
+    if (!message) {
 
       return;
 
     }
 
 
-    try {
+    messageInput.value = "";
 
-      recognition.start();
 
-    } catch (error) {
+    sendMessage(
+      message
+    );
 
-      console.log(
-        "Recognition već radi."
-      );
+  }
+);
+
+
+/*
+==================================================
+ENTER ZA SLANJE
+==================================================
+*/
+
+messageInput.addEventListener(
+  "keydown",
+  function(event) {
+
+    if (
+      event.key === "Enter"
+    ) {
+
+      event.preventDefault();
+
+      sendButton.click();
 
     }
 
   }
+);
+
+
+/*
+==================================================
+TEST TTS DUGME
+==================================================
+*/
+
+voiceButton.addEventListener(
+  "click",
+  function() {
+
+    const text =
+      "Zdravo! Ja sam tvoj AI asistent. Glas radi.";
+
+    speakResponse(text);
+
+  }
+);
+
+
+/*
+==================================================
+INFORMACIJA O UREĐAJU
+==================================================
+*/
+
+console.log(
+  isMobileDevice()
+    ? "📱 Mobilni uređaj"
+    : "💻 Računar"
+);
+
+console.log(
+  "Speech Synthesis podržan:",
+  "speechSynthesis" in window
+);
+
+
+/*
+==================================================
+POČETNA PORUKA
+==================================================
+*/
+
+addMessage(
+  "Zdravo! Pošalji mi poruku i odgovorit ću ti glasom.",
+  "assistant"
 );
 
 </script>

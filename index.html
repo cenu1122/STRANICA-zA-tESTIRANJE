@@ -18,7 +18,7 @@
             if (!tekst.trim()) return;
 
             try {
-                // 1. Pozivamo našu Supabase funkciju sa uključenim ključem i JSON formatom
+                // Pozivamo Supabase funkciju sa kompletnim zaglavljima
                 const response = await fetch("https://lvvidixbdtjfwxxxqzr.supabase.co/functions/v1/MICROSOFT_EDGE_FUNKCIJA_IZGOVOR", {
                     method: "POST",
                     headers: { 
@@ -34,14 +34,13 @@
                 const aiTekst = await response.text();
                 console.log("AI Odgovor:", aiTekst);
 
-                // 2. Puštamo stabilan govor preko pouzdanog Edge-TTS javnog streama
-                const glas = "hr-HR-GabrijelaNeural"; // Može i sr-RS-SophieNeural
+                // Puštamo govor preko Edge-TTS streama
+                const glas = "hr-HR-GabrijelaNeural"; 
                 const audioUrl = `https://edge-tts-api.hf.space/api/tts?text=${encodeURIComponent(aiTekst)}&voice=${glas}`;
                 
                 const plejer = document.getElementById("audioPlejer");
                 plejer.src = audioUrl;
                 plejer.play().catch(() => {
-                    // Fallback ako HuggingFace zatreperi, koristi sistemski govor da nikad ne stane
                     const utterance = new SpeechSynthesisUtterance(aiTekst);
                     utterance.lang = 'hr-HR';
                     window.speechSynthesis.speak(utterance);

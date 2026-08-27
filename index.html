@@ -18,20 +18,30 @@
             if (!tekst.trim()) return;
 
             try {
-                // Pozivamo Supabase funkciju sa kompletnim zaglavljima
-                const response = await fetch("https://lvvidixbdtjfwxxxqzr.supabase.co/functions/v1/MICROSOFT_EDGE_FUNKCIJA_IZGOVOR", {
+                // Pozivamo Groq API direktno, bez Supabase komplikacija
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: { 
                         "Content-Type": "application/json",
-                        "apikey": "sb_publishable_DMELD0DRGcKD9u12lowjgw_sPBaLqhTok",
-                        "Authorization": "Bearer sb_publishable_DMELD0DRGcKD9u12lowjgw_sPBaLqhTok"
+                        "Authorization": "Bearer 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"
                     },
-                    body: JSON.stringify({ prompt: tekst })
+                    body: JSON.stringify({
+                        model: "qwen/qwen3.6-27b",
+                        messages: [
+                            { role: "system", content: "Daj kratak i direktan odgovor u maksimalno 2 rečenice." },
+                            { role: "user", content: tekst }
+                        ]
+                    })
                 });
 
-                if (!response.ok) throw new Error("Greška sa Supabase servera");
+                if (!response.ok) throw new Error("Greška sa Groq servera");
 
-                const aiTekst = await response.text();
+                const data = await response.json();
+                let aiTekst = data.choices[0]?.message?.content || "Nema odgovora.";
+                
+                // Uklanjamo eventualne <think> tagove ako se pojave
+                aiTekst = aiTekst.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+
                 console.log("AI Odgovor:", aiTekst);
 
                 // Puštamo govor preko Edge-TTS streama

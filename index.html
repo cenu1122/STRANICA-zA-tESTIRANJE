@@ -18,15 +18,18 @@
             if (!tekst.trim()) return;
 
             try {
-                // Koristimo corsproxy.io da zaobiđemo CORS blokadu pretraživača prema Groq API-ju
-                const response = await fetch("https://corsproxy.io/?https://api.groq.com/openai/v1/chat/completions", {
+                // Koristimo allorigins proxy koji je stabilniji za JSON payload
+                const groqUrl = "https://api.groq.com/openai/v1/chat/completions";
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(groqUrl)}`;
+
+                const response = await fetch(proxyUrl, {
                     method: "POST",
                     headers: { 
                         "Content-Type": "application/json",
                         "Authorization": "Bearer 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"
                     },
                     body: JSON.stringify({
-                        model: "qwen/qwen3.6-27b",
+                        model: "llama-3.3-70b-versatile",
                         messages: [
                             { role: "system", content: "Daj kratak i direktan odgovor u maksimalno 2 rečenice." },
                             { role: "user", content: tekst }
@@ -34,14 +37,16 @@
                     })
                 });
 
-                if (!response.ok) throw new Error("Greška sa Groq servera");
+                if (!response.ok) {
+                    const errText = await response.text();
+                    console.error("Groq greska detalji:", errText);
+                    throw new Error("Greška sa Groq servera (Status: " + response.status + ")");
+                }
 
                 const data = await response.json();
                 let aiTekst = data.choices[0]?.message?.content || "Nema odgovora.";
                 
-                // Uklanjamo eventualne <think> tagove ako se pojave
                 aiTekst = aiTekst.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-
                 console.log("AI Odgovor:", aiTekst);
 
                 // Puštamo govor preko Edge-TTS streama

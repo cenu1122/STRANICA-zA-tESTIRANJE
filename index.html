@@ -1,72 +1,523 @@
 <!DOCTYPE html>
-<html lang="hr">
+<html lang="bs">
 <head>
-    <meta charset="UTF-8">
-    <title>AI Glasovni Asistent</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Glasovni asistent</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 600px;
+      height: 90vh;
+      max-height: 800px;
+      background: #1f2937;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+
+    .header {
+      padding: 20px;
+      text-align: center;
+      background: #111827;
+      border-bottom: 1px solid #374151;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #2563eb;
+    }
+
+    .assistant {
+      align-self: flex-start;
+      background: #374151;
+    }
+
+    .controls {
+      padding: 20px;
+      background: #111827;
+      border-top: 1px solid #374151;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #messageInput {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #4b5563;
+      background: #1f2937;
+      color: white;
+      outline: none;
+      font-size: 16px;
+    }
+
+    #sendButton {
+      padding: 0 20px;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .mic-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    #micButton {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      background: #2563eb;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    #micButton:hover {
+      transform: scale(1.05);
+    }
+
+    #micButton.listening {
+      background: #dc2626;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(220,38,38,0.6);
+      }
+
+      70% {
+        box-shadow: 0 0 0 20px rgba(220,38,38,0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(220,38,38,0);
+      }
+    }
+
+    .hint {
+      text-align: center;
+      margin-top: 10px;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+  </style>
 </head>
+
 <body>
 
-    <h2>AI Glasovni Asistent</h2>
-    <textarea id="korisnickiTekst" rows="4" cols="50">Zdravo, kako si?</textarea>
-    <br>
-    <button onclick="pitajAsistenta()">Pošalji</button>
-    <audio id="audioPlejer" controls style="display:block; margin-top:15px;"></audio>
+  <div class="app">
 
-    <script>
-        async function pitajAsistenta() {
-            const tekst = document.getElementById("korisnickiTekst").value;
-            if (!tekst.trim()) return;
+    <div class="header">
+      <h1>🎙️ Glasovni asistent</h1>
+      <div class="status" id="status">
+        Spreman
+      </div>
+    </div>
 
-            try {
-                // Koristimo allorigins proxy koji je stabilniji za JSON payload
-                const groqUrl = "https://api.groq.com/openai/v1/chat/completions";
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(groqUrl)}`;
+    <div class="messages" id="messages">
 
-                const response = await fetch(proxyUrl, {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer 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"
-                    },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [
-                            { role: "system", content: "Daj kratak i direktan odgovor u maksimalno 2 rečenice." },
-                            { role: "user", content: tekst }
-                        ]
-                    })
-                });
+      <div class="message assistant">
+        Zdravo! 👋 Pritisni mikrofon i pričaj sa mnom.
+      </div>
 
-                if (!response.ok) {
-                    const errText = await response.text();
-                    console.error("Groq greska detalji:", errText);
-                    throw new Error("Greška sa Groq servera (Status: " + response.status + ")");
-                }
+    </div>
 
-                const data = await response.json();
-                let aiTekst = data.choices[0]?.message?.content || "Nema odgovora.";
-                
-                aiTekst = aiTekst.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-                console.log("AI Odgovor:", aiTekst);
+    <div class="controls">
 
-                // Puštamo govor preko Edge-TTS streama
-                const glas = "hr-HR-GabrijelaNeural"; 
-                const audioUrl = `https://edge-tts-api.hf.space/api/tts?text=${encodeURIComponent(aiTekst)}&voice=${glas}`;
-                
-                const plejer = document.getElementById("audioPlejer");
-                plejer.src = audioUrl;
-                plejer.play().catch(() => {
-                    const utterance = new SpeechSynthesisUtterance(aiTekst);
-                    utterance.lang = 'hr-HR';
-                    window.speechSynthesis.speak(utterance);
-                });
+      <div class="input-row">
 
-            } catch (error) {
-                console.error("Greška:", error);
-                alert("Došlo je do greške: " + error.message);
-            }
-        }
-    </script>
+        <input
+          type="text"
+          id="messageInput"
+          placeholder="Napiši poruku..."
+          autocomplete="off"
+        >
+
+        <button id="sendButton">
+          Pošalji
+        </button>
+
+      </div>
+
+      <div class="mic-row">
+
+        <button id="micButton">
+          🎤
+        </button>
+
+      </div>
+
+      <div class="hint">
+        Pritisni mikrofon i govori na bosanskom.
+      </div>
+
+    </div>
+
+  </div>
+
+
+<script>
+
+const SUPABASE_FUNCTION =
+  "https://lvvidixbdtdjfwxxxqzr.supabase.co/functions/v1/WEB_MOBILNE_APK";
+
+
+const messages = document.getElementById("messages");
+const messageInput = document.getElementById("messageInput");
+const sendButton = document.getElementById("sendButton");
+const micButton = document.getElementById("micButton");
+const statusText = document.getElementById("status");
+
+
+// --------------------------------------------------
+// DODAVANJE PORUKE NA EKRAN
+// --------------------------------------------------
+
+function addMessage(text, type) {
+
+  const message = document.createElement("div");
+
+  message.className = "message " + type;
+
+  message.textContent = text;
+
+  messages.appendChild(message);
+
+  messages.scrollTop = messages.scrollHeight;
+}
+
+
+// --------------------------------------------------
+// SLANJE PORUKE GROQU
+// --------------------------------------------------
+
+async function sendMessage(text) {
+
+  text = text.trim();
+
+  if (!text) {
+    return;
+  }
+
+  addMessage(text, "user");
+
+  messageInput.value = "";
+
+  statusText.textContent = "Asistent razmišlja...";
+
+  sendButton.disabled = true;
+  micButton.disabled = true;
+
+  try {
+
+    const response = await fetch(
+      SUPABASE_FUNCTION,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          message: text
+        })
+      }
+    );
+
+
+    const data = await response.json();
+
+
+    console.log("Supabase odgovor:", data);
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Greška servera."
+      );
+
+    }
+
+
+    if (!data.reply) {
+
+      throw new Error(
+        "Server nije vratio odgovor."
+      );
+
+    }
+
+
+    addMessage(
+      data.reply,
+      "assistant"
+    );
+
+
+    statusText.textContent =
+      "Spreman";
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    addMessage(
+      "Greška: " + error.message,
+      "assistant"
+    );
+
+    statusText.textContent =
+      "Greška";
+
+
+  } finally {
+
+    sendButton.disabled = false;
+    micButton.disabled = false;
+
+  }
+}
+
+
+// --------------------------------------------------
+// DUGME POŠALJI
+// --------------------------------------------------
+
+sendButton.addEventListener(
+  "click",
+  () => {
+
+    sendMessage(
+      messageInput.value
+    );
+
+  }
+);
+
+
+// --------------------------------------------------
+// ENTER ZA SLANJE
+// --------------------------------------------------
+
+messageInput.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (event.key === "Enter") {
+
+      sendMessage(
+        messageInput.value
+      );
+
+    }
+
+  }
+);
+
+
+// --------------------------------------------------
+// SPEECH RECOGNITION
+// --------------------------------------------------
+
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+
+let recognition = null;
+
+
+if (SpeechRecognition) {
+
+  recognition =
+    new SpeechRecognition();
+
+
+  recognition.lang =
+    "bs-BA";
+
+
+  recognition.continuous =
+    false;
+
+
+  recognition.interimResults =
+    false;
+
+
+  recognition.onstart = () => {
+
+    micButton.classList.add(
+      "listening"
+    );
+
+    statusText.textContent =
+      "Slušam... 🎤";
+
+  };
+
+
+  recognition.onresult =
+    (event) => {
+
+      const text =
+        event.results[0][0].transcript;
+
+      console.log(
+        "Prepoznato:",
+        text
+      );
+
+      messageInput.value =
+        text;
+
+      sendMessage(text);
+
+    };
+
+
+  recognition.onerror =
+    (event) => {
+
+      console.error(
+        "Speech recognition error:",
+        event.error
+      );
+
+      statusText.textContent =
+        "Greška mikrofona";
+
+    };
+
+
+  recognition.onend =
+    () => {
+
+      micButton.classList.remove(
+        "listening"
+      );
+
+      if (
+        statusText.textContent ===
+        "Slušam... 🎤"
+      ) {
+
+        statusText.textContent =
+          "Spreman";
+
+      }
+
+    };
+
+
+} else {
+
+  micButton.disabled = true;
+
+  statusText.textContent =
+    "Browser ne podržava mikrofon";
+
+}
+
+
+// --------------------------------------------------
+// DUGME MIKROFON
+// --------------------------------------------------
+
+micButton.addEventListener(
+  "click",
+  () => {
+
+    if (!recognition) {
+
+      alert(
+        "Ovaj browser ne podržava prepoznavanje govora."
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      recognition.start();
+
+    } catch (error) {
+
+      console.log(
+        "Recognition već radi."
+      );
+
+    }
+
+  }
+);
+
+</script>
 
 </body>
 </html>

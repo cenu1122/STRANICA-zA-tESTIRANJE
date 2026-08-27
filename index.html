@@ -725,6 +725,119 @@ addMessage(
   "assistant"
 );
 
+  /*
+==================================================
+MIKROFON
+==================================================
+*/
+
+const micButton =
+  document.getElementById("micButton");
+
+const micStatus =
+  document.getElementById("micStatus");
+
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {
+
+  micStatus.textContent =
+    "❌ Ovaj browser ne podržava prepoznavanje govora.";
+
+  micButton.disabled = true;
+
+} else {
+
+  const recognition =
+    new SpeechRecognition();
+
+  recognition.lang = "bs-BA";
+
+  recognition.continuous = false;
+
+  recognition.interimResults = false;
+
+
+  micButton.addEventListener(
+    "click",
+    function() {
+
+      try {
+
+        recognition.start();
+
+        micStatus.textContent =
+          "🎤 Slušam... Govori sada.";
+
+        micButton.textContent =
+          "🛑 Slušam...";
+
+      } catch (error) {
+
+        console.error(
+          "Greška mikrofona:",
+          error
+        );
+
+      }
+
+    }
+  );
+
+
+  recognition.onresult =
+    function(event) {
+
+      const text =
+        event.results[0][0].transcript;
+
+      console.log(
+        "Prepoznat govor:",
+        text
+      );
+
+      messageInput.value =
+        text;
+
+      micStatus.textContent =
+        "✅ Čuo sam: " + text;
+
+      micButton.textContent =
+        "🎤 Mikrofon";
+
+    };
+
+
+  recognition.onerror =
+    function(event) {
+
+      console.error(
+        "Greška mikrofona:",
+        event.error
+      );
+
+      micStatus.textContent =
+        "❌ Greška mikrofona: " +
+        event.error;
+
+      micButton.textContent =
+        "🎤 Mikrofon";
+
+    };
+
+
+  recognition.onend =
+    function() {
+
+      micButton.textContent =
+        "🎤 Mikrofon";
+
+    };
+
+}
+
 </script>
 
 </body>

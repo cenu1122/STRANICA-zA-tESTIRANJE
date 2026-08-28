@@ -288,188 +288,17 @@ function addMessage(text, type) {
 
 /*
 ==================================================
-TTS
+TTS (Fallback za browser, opcionalno)
 ==================================================
 */
 
 function speakResponse(text) {
-
-  if (!("speechSynthesis" in window)) {
-
-    console.warn(
-      "Ovaj browser ne podržava Speech Synthesis."
-    );
-
-    status.textContent =
-      "TTS nije podržan u ovom browseru.";
-
-    return;
-
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+    const govor = new SpeechSynthesisUtterance(text);
+    govor.lang = "bs-BA";
+    window.speechSynthesis.speak(govor);
   }
-
-
-  /*
-  Zaustavi prethodni govor
-  */
-
-  window.speechSynthesis.cancel();
-
-
-  /*
-  Kreiraj govor
-  */
-
-  const govor =
-    new SpeechSynthesisUtterance(text);
-
-
-  /*
-  Bosanski jezik
-  */
-
-  govor.lang = "bs-BA";
-
-
-  /*
-  Brzina
-  */
-
-  govor.rate = 1;
-
-
-  /*
-  Visina glasa
-  */
-
-  govor.pitch = 1;
-
-
-  /*
-  Jačina
-  */
-
-  govor.volume = 1;
-
-
-  /*
-  Pronađi odgovarajući glas
-  */
-
-  const voices =
-    window.speechSynthesis.getVoices();
-
-
-  const bosanskiGlas =
-    voices.find(voice => {
-
-      const lang =
-        voice.lang.toLowerCase();
-
-      return (
-        lang === "bs-ba" ||
-        lang.startsWith("bs") ||
-        lang.startsWith("hr") ||
-        lang.startsWith("sr")
-      );
-
-    });
-
-
-  if (bosanskiGlas) {
-
-    govor.voice =
-      bosanskiGlas;
-
-    console.log(
-      "Odabran glas:",
-      bosanskiGlas.name,
-      bosanskiGlas.lang
-    );
-
-  } else {
-
-    console.log(
-      "Bosanski glas nije pronađen."
-    );
-
-    console.log(
-      "Browser će koristiti zadani glas."
-    );
-
-  }
-
-
-  /*
-  Početak govora
-  */
-
-  govor.onstart = function() {
-
-    status.textContent =
-      "🔊 Asistent govori...";
-
-  };
-
-
-  /*
-  Kraj govora
-  */
-
-  govor.onend = function() {
-
-    status.textContent =
-      "Spreman sam.";
-
-  };
-
-
-  /*
-  Greška
-  */
-
-  govor.onerror = function(event) {
-
-    console.error(
-      "TTS greška:",
-      event
-    );
-
-    status.textContent =
-      "Greška kod govora.";
-
-  };
-
-
-  /*
-  Pokreni govor
-  */
-
-  window.speechSynthesis.speak(govor);
-
-}
-
-
-/*
-==================================================
-UČITAVANJE TTS GLASOVA
-==================================================
-*/
-
-if ("speechSynthesis" in window) {
-
-  window.speechSynthesis.onvoiceschanged =
-    function() {
-
-      const voices =
-        window.speechSynthesis.getVoices();
-
-      console.log(
-        "Dostupni glasovi:",
-        voices
-      );
-
-    };
-
 }
 
 
@@ -578,12 +407,12 @@ async function sendMessage(message) {
 
 
     /*
-    GOVOR
+    POŠALJI ODGOVOR APP INVENTORU ZA ANDROID ZVUČNIK
     */
 
-    speakResponse(
-      data.reply
-    );
+    if (window.AppInventor && typeof window.AppInventor.setWebViewString === 'function') {
+        window.AppInventor.setWebViewString(data.reply);
+    }
 
 
     status.textContent =
@@ -698,24 +527,6 @@ voiceButton.addEventListener(
 
 /*
 ==================================================
-INFORMACIJA O UREĐAJU
-==================================================
-*/
-
-console.log(
-  isMobileDevice()
-    ? "📱 Mobilni uređaj"
-    : "💻 Računar"
-);
-
-console.log(
-  "Speech Synthesis podržan:",
-  "speechSynthesis" in window
-);
-
-
-/*
-==================================================
 POČETNA PORUKA
 ==================================================
 */
@@ -725,9 +536,10 @@ addMessage(
   "assistant"
 );
 
-  /*
+
+/*
 ==================================================
-MIKROFON
+MIKROFON (Opcionalno, ako zatreba)
 ==================================================
 */
 
@@ -793,11 +605,6 @@ if (!SpeechRecognition) {
       const text =
         event.results[0][0].transcript;
 
-      console.log(
-        "Prepoznat govor:",
-        text
-      );
-
       messageInput.value =
         text;
 
@@ -812,11 +619,6 @@ if (!SpeechRecognition) {
 
   recognition.onerror =
     function(event) {
-
-      console.error(
-        "Greška mikrofona:",
-        event.error
-      );
 
       micStatus.textContent =
         "❌ Greška mikrofona: " +

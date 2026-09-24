@@ -1,40 +1,202 @@
 <!DOCTYPE html>
-<html lang="bs">
+<html lang="hr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transkript Reda 35 - Autovoxai.com</title>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .info-box {
+            background: #eef2f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .audio-container {
+            margin-bottom: 20px;
+        }
+        audio {
+            width: 100%;
+        }
+        .transcript-box {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .message.user {
+            background: #e1f5fe;
+            text-align: left;
+        }
+        .message.assistant {
+            background: #e8f5e9;
+            text-align: left;
+        }
+        .role {
+            font-weight: bold;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .text {
+            font-size: 1em;
+            line-height: 1.4;
+        }
+        .time {
+            font-size: 0.75em;
+            color: #888;
+            text-align: right;
+            margin-top: 4px;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .back-btn:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
 
-  <title>Glasovni AI Asistent</title>
+<div class="container">
+    <h1>Transkript za Red ID: 35</h1>
+    
+    <div id="loading" style="text-align: center; font-weight: bold; color: #666;">Učitavanje podataka iz reda 35...</div>
 
-  <style>
-    * {
-      box-sizing: border-box;
+    <div id="content" style="display: none;">
+        <div class="info-box">
+            <p><strong>ID Reda:</strong> <span id="call-id"></span></p>
+            <p><strong>Poruka:</strong> <span id="call-poruka"></span></p>
+            <p><strong>Broj Telefona (TO):</strong> <span id="call-to"></span></p>
+        </div>
+
+        <div class="audio-container" id="audio-section" style="display: none;">
+            <h3>Audio snimak poziva:</h3>
+            <audio id="audio-player" controls></audio>
+        </div>
+
+        <h3>Transkript:</h3>
+        <div class="transcript-box" id="transcript-container">
+            <!-- Ovdje se ubacuju poruke dinamički -->
+        </div>
+    </div>
+
+    <a href="index.html" class="back-btn">← Nazad na Dashboard</a>
+</div>
+
+<script>
+    // Supabase parametri
+    const SUPABASE_URL = "https://lvvidixbdtdjfwxxxqzr.supabase.co";
+    const SUPABASE_ANON_KEY = "OVDJE_STAVI_SVOJ_ANON_KEY_ILI_SERVICE_KEY"; 
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadTranscript() {
+        try {
+            // Fiksno povlačimo zapis gdje je ID jednak 35
+            const { data, error } = await supabaseClient
+                .from("RAZGOVORI_TELNYX")
+                .select("*")
+                .eq("ID", 35)
+                .maybeSingle();
+
+            if (error || !data) {
+                document.getElementById('loading').innerText = "Greška: Red sa ID 35 nije pronađen u bazi.";
+                console.error(error);
+                return;
+            }
+
+            // Popunjavanje osnovnih informacija iz reda 35
+            document.getElementById('call-id').innerText = data.ID ?? 'N/A';
+            document.getElementById('call-poruka').innerText = data.PORUKA ?? 'Nema poruke';
+            document.getElementById('call-to').innerText = data.TO ?? 'Nepoznato';
+
+            // Prikaz audio snimka ako postoji URL
+            if (data.URL) {
+                document.getElementById('audio-player').src = data.URL;
+                document.getElementById('audio-section').style.display = 'block';
+            }
+
+            // Prikaz transkripcije
+            const transcriptContainer = document.getElementById('transcript-container');
+            transcriptContainer.innerHTML = '';
+
+            const transcriptionArray = Array.isArray(data.TRANSKRIPCIJA) ? data.TRANSKRIPCIJA : [];
+
+            if (transcriptionArray.length === 0) {
+                transcriptContainer.innerHTML = '<p style="color: #777; text-align: center;">Transkripcija za red 35 je prazna ([ ]).</p>';
+            } else {
+                transcriptionArray.forEach(item => {
+                    const msgDiv = document.createElement('div');
+                    const roleClass = item.role === 'user' ? 'user' : 'assistant';
+                    msgDiv.className = `message ${roleClass}`;
+
+                    const timeFormatted = item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : '';
+
+                    msgDiv.innerHTML = `
+                        <div class="role">${item.role === 'user' ? 'Korisnik (User)' : 'AI Asistent'}</div>
+                        <div class="text">${escapeHtml(item.text)}</div>
+                        <div class="time">${timeFormatted}</div>
+                    `;
+                    transcriptContainer.appendChild(msgDiv);
+                });
+            }
+
+            // Sakrij loading, prikaži sadržaj
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+        } catch (err) {
+            console.error("Greška pri učitavanju:", err);
+            document.getElementById('loading').innerText = "Došlo je do greške pri učitavanju reda 35.";
+        }
     }
 
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    .container {
-      width: 100%;
-      max-width: 700px;
-      padding: 20px;
-    }
+    window.onload = loadTranscript;
+</script>
 
-    .assistant {
-      background: #1f2937;
-      border-radius: 20px;
-      padding: 25px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-    }
+</body>
+</html>    }
 
     h1 {
       text-align: center;

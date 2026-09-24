@@ -46,19 +46,19 @@
 
     async function loadTranscript() {
         try {
-            // Prvo pokušavamo naći tačno ID 35 (malim slovima ili velikim zavisno šta baza traži)
+            // Pretraga tačno za ID 35 sa velikim slovima
             let { data, error } = await supabaseClient
                 .from("RAZGOVORI_TELNYX")
                 .select("*")
-                .eq("id", 35)
+                .eq("ID", 35)
                 .maybeSingle();
 
-            // Ako ga tu nema, probaj preko velikog ID-ja ili uzmi zadnji uneti red sa podacima
+            // Ako ga ne nađe pod ID 35, povuci zadnji red u tabeli
             if (!data) {
                 const res = await supabaseClient
                     .from("RAZGOVORI_TELNYX")
                     .select("*")
-                    .order("id", { ascending: false })
+                    .order("ID", { ascending: false })
                     .limit(1);
                 
                 if (res.data && res.data.length > 0) {
@@ -71,7 +71,7 @@
                 return;
             }
 
-            document.getElementById('call-id').innerText = data.id ?? data.ID ?? 'N/A';
+            document.getElementById('call-id').innerText = data.ID ?? 'N/A';
             document.getElementById('call-to').innerText = data.TO ?? 'Nepoznato';
 
             const transcriptContainer = document.getElementById('transcript-container');

@@ -10,21 +10,56 @@
         .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .info-box { background: #eef2f3; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .transcript-box { border: 1px solid #ddd; border-radius: 5px; padding: 15px; max-height: 450px; overflow-y: auto; background: #fafafa; }
-        .message { margin-bottom: 15px; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .message.user { background: #e1f5fe; border-left: 4px solid #03a9f4; }
-        .message.assistant { background: #e8f5e9; border-left: 4px solid #4caf50; }
-        .role { font-weight: bold; font-size: 0.9em; margin-bottom: 5px; text-transform: uppercase; color: #333; }
-        .text { font-size: 1.05em; line-height: 1.4; color: #2c3e50; }
-        .time { font-size: 0.75em; color: #777; text-align: right; margin-top: 5px; }
+        
+        /* Chat kontejner */
+        .transcript-box { 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 20px; 
+            max-height: 500px; 
+            overflow-y: auto; 
+            background: #ffffff; 
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Stilizacija poruka kao chat baloni */
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Korisnik (Lijeva strana) */
+        .message.user {
+            background: #e1f5fe;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        /* AI Asistent (Desna strana) */
+        .message.assistant {
+            background: #e8f5e9;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .role { font-weight: bold; font-size: 0.75em; margin-bottom: 4px; text-transform: uppercase; color: #555; }
+        .text { font-size: 1em; line-height: 1.4; word-break: break-word; }
+        .time { font-size: 0.7em; color: #888; text-align: right; margin-top: 4px; }
+        
         .back-btn { display: inline-block; margin-top: 20px; padding: 10px 15px; background: #3498db; color: white; text-decoration: none; border-radius: 4px; }
+        .back-btn:hover { background: #2980b9; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Detaljan Pregled Transkripcije</h1>
-    <div id="loading" style="text-align: center; font-weight: bold; color: #666;">Učitavanje poruka iz baze...</div>
+    <h1>Hronološki Pregled Razgovora (Chat)</h1>
+    <div id="loading" style="text-align: center; font-weight: bold; color: #666;">Učitavanje podataka iz reda 35...</div>
 
     <div id="content" style="display: none;">
         <div class="info-box">
@@ -32,7 +67,7 @@
             <p><strong>Broj Telefona:</strong> <span id="call-to"></span></p>
         </div>
 
-        <h3>Razgovor (Ko je šta i kada rekao):</h3>
+        <h3>Razgovor:</h3>
         <div class="transcript-box" id="transcript-container"></div>
     </div>
 
@@ -47,7 +82,6 @@
 
     async function loadTranscript() {
         try {
-            // Povlačimo podatke iz reda 35
             let { data, error } = await supabaseClient
                 .from("RAZGOVORI_TELNYX")
                 .select("*")
@@ -77,7 +111,6 @@
             const transcriptContainer = document.getElementById('transcript-container');
             transcriptContainer.innerHTML = '';
 
-            // Parsiranje transkripcije (ako je string ili niz)
             let transcriptionArray = [];
             if (typeof data.TRANSKRIPCIJA === 'string') {
                 try {
@@ -97,7 +130,7 @@
                     const isUser = item.role === 'user';
                     msgDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
 
-                    const roleName = isUser ? 'Korisnik (Sagovornik)' : 'AI Asistent';
+                    const roleName = isUser ? 'Korisnik' : 'AI Asistent';
                     const timeFormatted = item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : '';
 
                     msgDiv.innerHTML = `

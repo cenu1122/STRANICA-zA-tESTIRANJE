@@ -3,75 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transkript Razgovora - Autovoxai.com</title>
+    <title>Svi Transkripti Razgovora - Autovoxai.com</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .info-box { background: #eef2f3; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        
-        /* Chat kontejner */
-        .transcript-box { 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            padding: 20px; 
-            max-height: 500px; 
-            overflow-y: auto; 
-            background: #ffffff; 
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        /* Stilizacija poruka kao chat baloni */
-        .message {
-            max-width: 75%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            position: relative;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        /* Korisnik (Lijeva strana) */
-        .message.user {
-            background: #e1f5fe;
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
-        }
-
-        /* AI Asistent (Desna strana) */
-        .message.assistant {
-            background: #e8f5e9;
-            align-self: flex-end;
-            border-bottom-right-radius: 2px;
-        }
-
-        .role { font-weight: bold; font-size: 0.75em; margin-bottom: 4px; text-transform: uppercase; color: #555; }
-        .text { font-size: 1em; line-height: 1.4; word-break: break-word; }
-        .time { font-size: 0.7em; color: #888; text-align: right; margin-top: 4px; }
-        
-        .back-btn { display: inline-block; margin-top: 20px; padding: 10px 15px; background: #3498db; color: white; text-decoration: none; border-radius: 4px; }
-        .back-btn:hover { background: #2980b9; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .call-card { background: #fafafa; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .call-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .call-info font { font-weight: bold; color: #555; }
+        .transcript-box { background: #fff; border: 1px solid #e1e1e1; border-radius: 6px; padding: 15px; max-height: 300px; overflow-y: auto; }
+        .message { margin-bottom: 10px; padding: 10px; border-radius: 6px; }
+        .message.user { background: #e1f5fe; border-left: 4px solid #03a9f4; }
+        .message.assistant { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .role { font-weight: bold; font-size: 0.85em; text-transform: uppercase; margin-bottom: 4px; color: #444; }
+        .text { font-size: 0.95em; line-height: 1.4; }
+        .time { font-size: 0.75em; color: #777; text-align: right; margin-top: 3px; }
+        audio { width: 100%; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Hronološki Pregled Razgovora (Chat)</h1>
-    <div id="loading" style="text-align: center; font-weight: bold; color: #666;">Učitavanje podataka iz reda 35...</div>
-
-    <div id="content" style="display: none;">
-        <div class="info-box">
-            <p><strong>ID Reda:</strong> <span id="call-id"></span></p>
-            <p><strong>Broj Telefona:</strong> <span id="call-to"></span></p>
-        </div>
-
-        <h3>Razgovor:</h3>
-        <div class="transcript-box" id="transcript-container"></div>
+    <h1>Svi Transkripti Razgovora</h1>
+    
+    <div id="loading" style="text-align: center; font-weight: bold; color: #666; padding: 20px;">Učitavanje svih razgovora iz baze...</div>
+    
+    <div id="calls-container">
+        <!-- Ovdje se dinamički ucitavaju kartice za svaki poziv -->
     </div>
-
-    <a href="index.html" class="back-btn">← Nazad na Dashboard</a>
 </div>
 
 <script>
@@ -80,78 +40,110 @@
     
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function loadTranscript() {
+    async function loadAllTranscripts() {
         try {
+            // Povlačimo SVE redove iz tabele RAZGOVORI_TELNYX sortirane po ID-ju silazno (najnoviji prvi)
             let { data, error } = await supabaseClient
                 .from("RAZGOVORI_TELNYX")
                 .select("*")
-                .eq("ID", 35)
-                .maybeSingle();
+                .order("ID", { ascending: false });
 
-            if (!data) {
-                const res = await supabaseClient
-                    .from("RAZGOVORI_TELNYX")
-                    .select("*")
-                    .order("ID", { ascending: false })
-                    .limit(1);
-                
-                if (res.data && res.data.length > 0) {
-                    data = res.data[0];
-                }
-            }
-
-            if (!data) {
-                document.getElementById('loading').innerText = "Nema pronađenih zapisa u tabeli.";
+            if (error) {
+                console.error("Greška pri dohvatanju:", error);
+                document.getElementById('loading').innerText = "Došlo je do greške pri učitavanju podataka.";
                 return;
             }
 
-            document.getElementById('call-id').innerText = data.ID ?? 'N/A';
-            document.getElementById('call-to').innerText = data.TO ?? 'Nepoznato';
+            const container = document.getElementById('calls-container');
+            container.innerHTML = '';
 
-            const transcriptContainer = document.getElementById('transcript-container');
-            transcriptContainer.innerHTML = '';
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #777;">Nema pronađenih razgovora u bazi.</p>';
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
 
-            let transcriptionArray = [];
-            if (typeof data.TRANSKRIPCIJA === 'string') {
-                try {
-                    transcriptionArray = JSON.parse(data.TRANSKRIPCIJA);
-                } catch (e) {
-                    transcriptionArray = [];
+            // Prolazimo kroz svaki red i pravimo karticu
+            data.forEach(call => {
+                const card = document.createElement('div');
+                card.className = 'call-card';
+
+                const callId = call.ID ?? 'N/A';
+                const callTo = call.TO ?? 'Nepoznato';
+                const callStatus = call.STATUS_POZIVA ?? call.STATUS ?? 'Završeno';
+                const audioUrl = call.URL;
+
+                // Parsiranje transkripcije (bilo da je string ili niz)
+                let transcriptionArray = [];
+                if (typeof call.TRANSKRIPCIJA === 'string') {
+                    try {
+                        transcriptionArray = JSON.parse(call.TRANSKRIPCIJA);
+                    } catch (e) {
+                        transcriptionArray = [];
+                    }
+                } else if (Array.isArray(call.TRANSKRIPCIJA)) {
+                    transcriptionArray = call.TRANSKRIPCIJA;
                 }
-            } else if (Array.isArray(data.TRANSKRIPCIJA)) {
-                transcriptionArray = data.TRANSKRIPCIJA;
-            }
 
-            if (transcriptionArray.length === 0) {
-                transcriptContainer.innerHTML = '<p style="color: #777; text-align: center;">Transkripcija je trenutno prazna ([ ]).</p>';
-            } else {
-                transcriptionArray.forEach(item => {
-                    const msgDiv = document.createElement('div');
-                    const isUser = item.role === 'user';
-                    msgDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+                let messagesHtml = '';
+                if (transcriptionArray.length === 0) {
+                    messagesHtml = '<p style="color: #777; text-align: center; font-style: italic;">Transkripcija za ovaj razgovor je prazna.</p>';
+                } else {
+                    transcriptionArray.forEach(item => {
+                        const isUser = item.role === 'user';
+                        const roleName = isUser ? 'Korisnik (Sagovornik)' : 'AI Asistent';
+                        const timeFormatted = item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : '';
 
-                    const roleName = isUser ? 'Korisnik' : 'AI Asistent';
-                    const timeFormatted = item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : '';
+                        messagesHtml += `
+                            <div class="message ${isUser ? 'user' : 'assistant'}">
+                                <div class="role">${roleName}</div>
+                                <div class="text">${escapeHtml(item.text)}</div>
+                                ${timeFormatted ? `<div class="time">${timeFormatted}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                }
 
-                    msgDiv.innerHTML = `
-                        <div class="role">${roleName}</div>
-                        <div class="text">${item.text || ''}</div>
-                        ${timeFormatted ? `<div class="time">${timeFormatted}</div>` : ''}
-                    `;
-                    transcriptContainer.appendChild(msgDiv);
-                });
-            }
+                card.innerHTML = `
+                    <div class="call-header">
+                        <div>
+                            <strong>ID Reda:</strong> ${callId} | 
+                            <strong>Telefon:</strong> ${callTo}
+                        </div>
+                        <div>
+                            <span style="background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">${callStatus}</span>
+                        </div>
+                    </div>
+
+                    ${audioUrl ? `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Audio snimak poziva:</strong>
+                            <audio controls src="${audioUrl}"></audio>
+                        </div>
+                    ` : ''}
+
+                    <div class="transcript-box">
+                        ${messagesHtml}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
 
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('content').style.display = 'block';
 
         } catch (err) {
-            console.error("Greška:", err);
-            document.getElementById('loading').innerText = "Došlo je do greške pri učitavanju.";
+            console.error("Neočekivana greška:", err);
+            document.getElementById('loading').innerText = "Greška pri obradi podataka.";
         }
     }
 
-    window.onload = loadTranscript;
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    window.onload = loadAllTranscripts;
 </script>
 
 </body>

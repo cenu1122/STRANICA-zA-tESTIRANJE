@@ -46,14 +46,12 @@
 
     async function loadTranscript() {
         try {
-            // Pretraga tačno za ID 35 sa velikim slovima
             let { data, error } = await supabaseClient
                 .from("RAZGOVORI_TELNYX")
                 .select("*")
                 .eq("ID", 35)
                 .maybeSingle();
 
-            // Ako ga ne nađe pod ID 35, povuci zadnji red u tabeli
             if (!data) {
                 const res = await supabaseClient
                     .from("RAZGOVORI_TELNYX")
@@ -77,7 +75,17 @@
             const transcriptContainer = document.getElementById('transcript-container');
             transcriptContainer.innerHTML = '';
 
-            const transcriptionArray = Array.isArray(data.TRANSKRIPCIJA) ? data.TRANSKRIPCIJA : [];
+            // Sigurno pretvaranje transkripcije u niz bez obzira da li je tekstualni JSON ili pravi niz
+            let transcriptionArray = [];
+            if (typeof data.TRANSKRIPCIJA === 'string') {
+                try {
+                    transcriptionArray = JSON.parse(data.TRANSKRIPCIJA);
+                } catch (e) {
+                    transcriptionArray = [];
+                }
+            } else if (Array.isArray(data.TRANSKRIPCIJA)) {
+                transcriptionArray = data.TRANSKRIPCIJA;
+            }
 
             if (transcriptionArray.length === 0) {
                 transcriptContainer.innerHTML = '<p style="color: #777; text-align: center;">Transkripcija za ovaj red je prazna ([ ]).</p>';

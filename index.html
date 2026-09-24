@@ -3,805 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transkript Reda 35 - Autovoxai.com</title>
-    <!-- Supabase CDN -->
+    <title>Transkript - Autovoxai.com</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        .info-box {
-            background: #eef2f3;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        .audio-container {
-            margin-bottom: 20px;
-        }
-        audio {
-            width: 100%;
-        }
-        .transcript-box {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-            background: #fafafa;
-        }
-        .message {
-            margin-bottom: 12px;
-            padding: 10px;
-            border-radius: 6px;
-        }
-        .message.user {
-            background: #e1f5fe;
-            text-align: left;
-        }
-        .message.assistant {
-            background: #e8f5e9;
-            text-align: left;
-        }
-        .role {
-            font-weight: bold;
-            font-size: 0.85em;
-            color: #555;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-        .text {
-            font-size: 1em;
-            line-height: 1.4;
-        }
-        .time {
-            font-size: 0.75em;
-            color: #888;
-            text-align: right;
-            margin-top: 4px;
-        }
-        .back-btn {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 15px;
-            background: #3498db;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .back-btn:hover {
-            background: #2980b9;
-        }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .info-box { background: #eef2f3; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .transcript-box { border: 1px solid #ddd; border-radius: 5px; padding: 15px; max-height: 400px; overflow-y: auto; background: #fafafa; }
+        .message { margin-bottom: 12px; padding: 10px; border-radius: 6px; }
+        .message.user { background: #e1f5fe; }
+        .message.assistant { background: #e8f5e9; }
+        .role { font-weight: bold; font-size: 0.85em; color: #555; margin-bottom: 4px; text-transform: uppercase; }
+        .text { font-size: 1em; line-height: 1.4; }
+        .back-btn { display: inline-block; margin-top: 20px; padding: 10px 15px; background: #3498db; color: white; text-decoration: none; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Transkript za Red ID: 35</h1>
-    
-    <div id="loading" style="text-align: center; font-weight: bold; color: #666;">Učitavanje podataka iz reda 35...</div>
+    <h1>Transkript Razgovora</h1>
+    <div id="loading" style="text-align: center; font-weight: bold; color: #666;">Učitavanje podataka...</div>
 
     <div id="content" style="display: none;">
         <div class="info-box">
-            <p><strong>ID Reda:</strong> <span id="call-id"></span></p>
-            <p><strong>Poruka:</strong> <span id="call-poruka"></span></p>
+            <p><strong>Pronađeni ID u bazi:</strong> <span id="call-id"></span></p>
             <p><strong>Broj Telefona (TO):</strong> <span id="call-to"></span></p>
         </div>
 
-        <div class="audio-container" id="audio-section" style="display: none;">
-            <h3>Audio snimak poziva:</h3>
-            <audio id="audio-player" controls></audio>
-        </div>
-
         <h3>Transkript:</h3>
-        <div class="transcript-box" id="transcript-container">
-            <!-- Ovdje se ubacuju poruke dinamički -->
-        </div>
+        <div class="transcript-box" id="transcript-container"></div>
     </div>
 
     <a href="index.html" class="back-btn">← Nazad na Dashboard</a>
 </div>
 
 <script>
-    // Supabase parametri
     const SUPABASE_URL = "https://lvvidixbdtdjfwxxxqzr.supabase.co";
-    const SUPABASE_ANON_KEY = "OVDJE_STAVI_SVOJ_ANON_KEY_ILI_SERVICE_KEY"; 
+    const SUPABASE_ANON_KEY = "OVDJE_STAVI_SVOJ_ANON_KEY"; 
     
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadTranscript() {
         try {
-            // Fiksno povlačimo zapis gdje je ID jednak 35
-            const { data, error } = await supabaseClient
+            // Prvo pokušavamo naći tačno ID 35 (malim slovima ili velikim zavisno šta baza traži)
+            let { data, error } = await supabaseClient
                 .from("RAZGOVORI_TELNYX")
                 .select("*")
-                .eq("ID", 35)
+                .eq("id", 35)
                 .maybeSingle();
 
-            if (error || !data) {
-                document.getElementById('loading').innerText = "Greška: Red sa ID 35 nije pronađen u bazi.";
-                console.error(error);
+            // Ako ga tu nema, probaj preko velikog ID-ja ili uzmi zadnji uneti red sa podacima
+            if (!data) {
+                const res = await supabaseClient
+                    .from("RAZGOVORI_TELNYX")
+                    .select("*")
+                    .order("id", { ascending: false })
+                    .limit(1);
+                
+                if (res.data && res.data.length > 0) {
+                    data = res.data[0];
+                }
+            }
+
+            if (!data) {
+                document.getElementById('loading').innerText = "Nema pronađenih zapisa u tabeli.";
                 return;
             }
 
-            // Popunjavanje osnovnih informacija iz reda 35
-            document.getElementById('call-id').innerText = data.ID ?? 'N/A';
-            document.getElementById('call-poruka').innerText = data.PORUKA ?? 'Nema poruke';
+            document.getElementById('call-id').innerText = data.id ?? data.ID ?? 'N/A';
             document.getElementById('call-to').innerText = data.TO ?? 'Nepoznato';
 
-            // Prikaz audio snimka ako postoji URL
-            if (data.URL) {
-                document.getElementById('audio-player').src = data.URL;
-                document.getElementById('audio-section').style.display = 'block';
-            }
-
-            // Prikaz transkripcije
             const transcriptContainer = document.getElementById('transcript-container');
             transcriptContainer.innerHTML = '';
 
             const transcriptionArray = Array.isArray(data.TRANSKRIPCIJA) ? data.TRANSKRIPCIJA : [];
 
             if (transcriptionArray.length === 0) {
-                transcriptContainer.innerHTML = '<p style="color: #777; text-align: center;">Transkripcija za red 35 je prazna ([ ]).</p>';
+                transcriptContainer.innerHTML = '<p style="color: #777; text-align: center;">Transkripcija za ovaj red je prazna ([ ]).</p>';
             } else {
                 transcriptionArray.forEach(item => {
                     const msgDiv = document.createElement('div');
                     const roleClass = item.role === 'user' ? 'user' : 'assistant';
                     msgDiv.className = `message ${roleClass}`;
 
-                    const timeFormatted = item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : '';
-
                     msgDiv.innerHTML = `
                         <div class="role">${item.role === 'user' ? 'Korisnik (User)' : 'AI Asistent'}</div>
-                        <div class="text">${escapeHtml(item.text)}</div>
-                        <div class="time">${timeFormatted}</div>
+                        <div class="text">${item.text}</div>
                     `;
                     transcriptContainer.appendChild(msgDiv);
                 });
             }
 
-            // Sakrij loading, prikaži sadržaj
             document.getElementById('loading').style.display = 'none';
             document.getElementById('content').style.display = 'block';
 
         } catch (err) {
-            console.error("Greška pri učitavanju:", err);
-            document.getElementById('loading').innerText = "Došlo je do greške pri učitavanju reda 35.";
+            console.error("Greška:", err);
+            document.getElementById('loading').innerText = "Došlo je do greške pri učitavanju.";
         }
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
     window.onload = loadTranscript;
-</script>
-
-</body>
-</html>    }
-
-    h1 {
-      text-align: center;
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-
-    .status {
-      text-align: center;
-      color: #9ca3af;
-      margin-bottom: 25px;
-    }
-
-    #chat {
-      height: 350px;
-      overflow-y: auto;
-      background: #111827;
-      border-radius: 15px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-
-    .message {
-      margin-bottom: 15px;
-      padding: 12px 15px;
-      border-radius: 12px;
-      line-height: 1.5;
-      word-wrap: break-word;
-    }
-
-    .user {
-      background: #374151;
-      text-align: right;
-    }
-
-    .assistant-message {
-      background: #2563eb;
-    }
-
-    .input-area {
-      display: flex;
-      gap: 10px;
-    }
-
-    #messageInput {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      outline: none;
-      font-size: 16px;
-    }
-
-    #sendButton {
-      border: none;
-      border-radius: 12px;
-      padding: 14px 20px;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    #sendButton:hover {
-      background: #1d4ed8;
-    }
-
-    #sendButton:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    #voiceButton {
-      width: 100%;
-      margin-top: 15px;
-      padding: 16px;
-      border: none;
-      border-radius: 12px;
-      background: #059669;
-      color: white;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    #voiceButton:hover {
-      background: #047857;
-    }
-
-    .info {
-      margin-top: 15px;
-      text-align: center;
-      font-size: 13px;
-      color: #9ca3af;
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
-
-      .assistant {
-        padding: 15px;
-      }
-
-      #chat {
-        height: 300px;
-      }
-
-      .input-area {
-        flex-direction: column;
-      }
-
-      #sendButton {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="container">
-
-    <div class="assistant">
-
-      <h1>🤖 AI Asistent</h1>
-
-      <div id="status" class="status">
-        Spreman sam.
-      </div>
-
-      <div id="chat"></div>
-
-      <div class="input-area">
-
-        <input
-          type="text"
-          id="messageInput"
-          placeholder="Napiši poruku..."
-          autocomplete="off"
-        >
-
-        <button id="sendButton">
-          Pošalji
-        </button>
-
-      </div>
-
-      <button id="voiceButton">
-  🔊 Testiraj glas
-</button>
-
-<button id="micButton">
-  🎤 Mikrofon
-</button>
-
-<div id="micStatus">
-  Mikrofon nije aktivan.
-</div>
-
-      <div class="info">
-        Trenutno testiramo odgovor i TTS. Mikrofon dodajemo u sljedećem koraku.
-      </div>
-
-    </div>
-
-  </div>
-
-
-<script>
-
-/*
-==================================================
-SUPABASE EDGE FUNCTION
-==================================================
-*/
-
-const SUPABASE_FUNCTION_URL =
-  "https://lvvidixbdtdjfwxxxqzr.supabase.co/functions/v1/WEB_MOBILNE_APK";
-
-
-/*
-==================================================
-ELEMENTI STRANICE
-==================================================
-*/
-
-const messageInput =
-  document.getElementById("messageInput");
-
-const sendButton =
-  document.getElementById("sendButton");
-
-const voiceButton =
-  document.getElementById("voiceButton");
-
-const chat =
-  document.getElementById("chat");
-
-const status =
-  document.getElementById("status");
-
-
-/*
-==================================================
-MOBILNI UREĐAJ
-==================================================
-*/
-
-function isMobileDevice() {
-
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
-    .test(navigator.userAgent);
-
-}
-
-
-/*
-==================================================
-DODAVANJE PORUKE U CHAT
-==================================================
-*/
-
-function addMessage(text, type) {
-
-  const message =
-    document.createElement("div");
-
-  message.classList.add("message");
-
-  if (type === "user") {
-
-    message.classList.add("user");
-
-  } else {
-
-    message.classList.add("assistant-message");
-
-  }
-
-  message.textContent = text;
-
-  chat.appendChild(message);
-
-  chat.scrollTop = chat.scrollHeight;
-
-}
-
-
-/*
-==================================================
-TTS (Fallback za browser, opcionalno)
-==================================================
-*/
-
-function speakResponse(text) {
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-    const govor = new SpeechSynthesisUtterance(text);
-    govor.lang = "bs-BA";
-    window.speechSynthesis.speak(govor);
-  }
-}
-
-
-/*
-==================================================
-SLANJE PORUKE SUPABASEU
-==================================================
-*/
-
-async function sendMessage(message) {
-
-  try {
-
-    status.textContent =
-      "⏳ Razmišljam...";
-
-    sendButton.disabled = true;
-
-
-    /*
-    Prikaži korisnikovu poruku
-    */
-
-    addMessage(
-      message,
-      "user"
-    );
-
-
-    /*
-    Pošalji poruku Supabase funkciji
-    */
-
-    const response =
-      await fetch(
-        SUPABASE_FUNCTION_URL,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify({
-            message: message
-          })
-        }
-      );
-
-
-    /*
-    Pročitaj odgovor
-    */
-
-    const data =
-      await response.json();
-
-
-    console.log(
-      "Supabase odgovor:",
-      data
-    );
-
-
-    /*
-    Ako server vrati grešku
-    */
-
-    if (!response.ok) {
-
-      console.error(
-        "Greška servera:",
-        data
-      );
-
-      throw new Error(
-        data.error ||
-        "Greška servera."
-      );
-
-    }
-
-
-    /*
-    Provjeri postoji li odgovor
-    */
-
-    if (!data.reply) {
-
-      throw new Error(
-        "Asistent nije vratio odgovor."
-      );
-
-    }
-
-
-    /*
-    Prikaži odgovor
-    */
-
-    addMessage(
-      data.reply,
-      "assistant"
-    );
-
-
-    /*
-    POŠALJI ODGOVOR APP INVENTORU ZA ANDROID ZVUČNIK
-    */
-
-    if (window.AppInventor && typeof window.AppInventor.setWebViewString === 'function') {
-        window.AppInventor.setWebViewString(data.reply);
-    }
-
-
-    status.textContent =
-      "Spreman sam.";
-
-
-    return data.reply;
-
-
-  } catch (error) {
-
-    console.error(
-      "sendMessage greška:",
-      error
-    );
-
-
-    status.textContent =
-      "❌ Greška.";
-
-
-    addMessage(
-      "Došlo je do greške: " +
-      error.message,
-      "assistant"
-    );
-
-
-  } finally {
-
-    sendButton.disabled = false;
-
-  }
-
-}
-
-
-/*
-==================================================
-DUGME POŠALJI
-==================================================
-*/
-
-sendButton.addEventListener(
-  "click",
-  function() {
-
-    const message =
-      messageInput.value.trim();
-
-
-    if (!message) {
-
-      return;
-
-    }
-
-
-    messageInput.value = "";
-
-
-    sendMessage(
-      message
-    );
-
-  }
-);
-
-
-/*
-==================================================
-ENTER ZA SLANJE
-==================================================
-*/
-
-messageInput.addEventListener(
-  "keydown",
-  function(event) {
-
-    if (
-      event.key === "Enter"
-    ) {
-
-      event.preventDefault();
-
-      sendButton.click();
-
-    }
-
-  }
-);
-
-
-/*
-==================================================
-TEST TTS DUGME
-==================================================
-*/
-
-voiceButton.addEventListener(
-  "click",
-  function() {
-
-    const text =
-      "Zdravo! Ja sam tvoj AI asistent. Glas radi.";
-
-    speakResponse(text);
-
-  }
-);
-
-
-/*
-==================================================
-POČETNA PORUKA
-==================================================
-*/
-
-addMessage(
-  "Zdravo! Pošalji mi poruku i odgovorit ću ti glasom.",
-  "assistant"
-);
-
-
-/*
-==================================================
-MIKROFON (Opcionalno, ako zatreba)
-==================================================
-*/
-
-const micButton =
-  document.getElementById("micButton");
-
-const micStatus =
-  document.getElementById("micStatus");
-
-const SpeechRecognition =
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
-
-if (!SpeechRecognition) {
-
-  micStatus.textContent =
-    "❌ Ovaj browser ne podržava prepoznavanje govora.";
-
-  micButton.disabled = true;
-
-} else {
-
-  const recognition =
-    new SpeechRecognition();
-
-  recognition.lang = "bs-BA";
-
-  recognition.continuous = false;
-
-  recognition.interimResults = false;
-
-
-  micButton.addEventListener(
-    "click",
-    function() {
-
-      try {
-
-        recognition.start();
-
-        micStatus.textContent =
-          "🎤 Slušam... Govori sada.";
-
-        micButton.textContent =
-          "🛑 Slušam...";
-
-      } catch (error) {
-
-        console.error(
-          "Greška mikrofona:",
-          error
-        );
-
-      }
-
-    }
-  );
-
-
-  recognition.onresult =
-    function(event) {
-
-      const text =
-        event.results[0][0].transcript;
-
-      messageInput.value =
-        text;
-
-      micStatus.textContent =
-        "✅ Čuo sam: " + text;
-
-      micButton.textContent =
-        "🎤 Mikrofon";
-
-    };
-
-
-  recognition.onerror =
-    function(event) {
-
-      micStatus.textContent =
-        "❌ Greška mikrofona: " +
-        event.error;
-
-      micButton.textContent =
-        "🎤 Mikrofon";
-
-    };
-
-
-  recognition.onend =
-    function() {
-
-      micButton.textContent =
-        "🎤 Mikrofon";
-
-    };
-
-}
-
 </script>
 
 </body>

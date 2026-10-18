@@ -1,135 +1,380 @@
 <!DOCTYPE html>
-<html lang="hr">
+<html lang="bs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Svi Razgovori - Autovoxai.com</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .call-card { background: #fafafa; border: 1px solid #ddd; border-radius: 6px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .call-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; font-weight: bold; color: #2c3e50; }
-        .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; }
-        .message.user { background: #e1f5fe; border-left: 4px solid #03a9f4; }
-        .message.assistant { background: #e8f5e9; border-left: 4px solid #4caf50; }
-        .role { font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 3px; color: #555; }
-        .text { font-size: 0.95em; line-height: 1.4; }
-        audio { width: 100%; margin-top: 10px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engleski kroz igru!</title>
+<style>
+:root { --blue: #315bea; --ink: #202747; --bg: #f4f6ff; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); font-family: Arial, sans-serif; color: var(--ink); }
+header { background: linear-gradient(120deg,#315bea,#8b5ce8); color: white; padding: 28px 16px; text-align: center; }
+header h1 { margin: 0 0 10px; font-size: clamp(26px,5vw,42px); }
+main { max-width: 1000px; margin: auto; padding: 18px; }
+.stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.stat { flex: 1; min-width: 130px; background: white; border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 3px 12px #26346a12; }
+.stat strong { display: block; font-size: 20px; color: var(--blue); margin-bottom: 5px; }
+.lessons { display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 12px; }
+.lesson { border: 0; background: white; border-radius: 18px; padding: 20px 10px; text-align: center; cursor: pointer; box-shadow: 0 3px 12px #26346a12; color: var(--ink); font-size: 16px; }
+.lesson:hover { transform: translateY(-2px); }
+.emoji { display: block; font-size: 34px; margin-bottom: 10px; }
+.panel { background: white; border-radius: 20px; padding: 22px; margin-top: 20px; box-shadow: 0 3px 15px #26346a12; }
+.hidden { display: none !important; }
+.word { background: #f0f3ff; border-radius: 16px; padding: 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.word b { font-size: 21px; }
+button, input { font: inherit; }
+button { touch-action: manipulation; }
+.action { background: var(--blue); color: white; border: 0; border-radius: 12px; padding: 13px 16px; cursor: pointer; font-weight: bold; margin: 4px 3px 4px 0; text-decoration: none; display: inline-block; text-align: center; }
+.sound { border: 0; background: #e6ebff; border-radius: 12px; padding: 11px 13px; cursor: pointer; }
+.extra-modes { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+#question { font-size: 22px; font-weight: bold; margin: 18px 0; }
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.answer { padding: 15px; border: 2px solid #e0e5fa; border-radius: 12px; background: white; cursor: pointer; font-size: 16px; }
+.answer:disabled { cursor: default; }
+#feedback { font-weight: bold; min-height: 28px; margin: 15px 0; line-height: 1.5; }
+#typingWord { font-size: 30px; font-weight: bold; text-align: center; background: #f0f3ff; border-radius: 16px; padding: 22px; margin: 15px 0; }
+#typedAnswer { width: 100%; padding: 14px; border: 2px solid #dce2f7; border-radius: 12px; margin: 10px 0; font-size: 18px; }
+footer { text-align: center; color: #6b7190; padding: 25px; }
+@media(max-width:450px) { main { padding: 12px; } .answers { grid-template-columns: 1fr; } }
+</style>
+<!-- Supabase skripta -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+<header>
+  <h1>🌟 Engleski kroz igru!</h1>
+  <p>Learn English with fun — Uči engleski kroz zabavu!</p>
+</header>
+<main>
+  <div class="stats">
+    <div class="stat"><strong id="points">0 ⭐</strong>Bodovi</div>
+    <div class="stat"><strong id="done">0 / 0</strong>Završene lekcije</div>
+    <div class="stat"><strong id="streak">🔥 0 dana</strong>Niz učenja</div>
+    <div class="stat"><strong id="badgeLevel">🥉 Brončani</strong>Nivo</div>
+  </div>
 
-<div class="container">
-    <h1>Pregled Svih Poziva i Transkripcija</h1>
-    <div id="loading" style="text-align: center; font-weight: bold; color: #666; padding: 20px;">Učitavanje svih redova iz baze...</div>
+  <div class="extra-modes">
+    <a href="dnevni_izazov.html" class="action">🎯 Dnevni izazov</a>
+    <a href="spajanje.html" class="action">🧩 Igra spajanja</a>
+    <a href="roditelji.html" class="action" style="background:#8b5ce8;">👨‍👩‍👧 Pregled za roditelje</a>
+  </div>
 
-    <div id="all-calls-container"></div>
-</div>
+  <h2>📚 Izaberi lekciju</h2>
+  <p>Klikni na temu, nauči riječi i isprobaj svoje znanje!</p>
+  <div class="lessons" id="lessons"></div>
+
+  <section class="panel hidden" id="study">
+    <h2 id="lessonTitle">Lekcija</h2>
+    <p id="lessonIntro"></p>
+    <div id="words"></div>
+    <button class="action" id="startQuiz">🎯 Započni kviz</button>
+    <button class="sound" id="wellDone">🔊 Well done!</button>
+    <button class="sound" id="backHome">← Sve lekcije</button>
+  </section>
+
+  <section class="panel hidden" id="quiz">
+    <h2>🧠 Vrijeme za kviz!</h2>
+    <div id="question"></div>
+    <div class="answers" id="answers"></div>
+    <div id="typingArea" class="hidden">
+      <div id="typingWord"></div>
+      <label for="typedAnswer"><b>✍️ Napiši riječ na engleskom:</b></label>
+      <input id="typedAnswer" type="text" placeholder="Upiši riječ na engleskom..." autocomplete="off">
+      <button class="action" id="checkTyped">Provjeri odgovor ✓</button>
+    </div>
+    <div id="feedback" aria-live="polite"></div>
+    <button class="action hidden" id="next">Sljedeće ➜</button>
+    <button class="sound" id="backFromQuiz">← Sve lekcije</button>
+  </section>
+</main>
+<footer>💛 Mali koraci, velike riječi! Keep learning!</footer>
 
 <script>
-    const SUPABASE_URL = "https://lvvidixbdtdjfwxxxqzr.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dmlkaXhiZHRkamZ3eHx4cXpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NjgzMjgsImV4cCI6MjA5MTE0NDMyOH0.HE3-5jMrxZ7suTR0lebcfZB-9WqslwExarGoxDYMA_s"; 
-    
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Supabase konekcija sa tvojim podacima
+const SUPABASE_URL = 'https://lvvidixbdtdjfwxxxqzr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_DMELD0DRGcKD9u12lowjgw_sPBaLqhT';
 
-    async function loadAllCalls() {
-        try {
-            // Nema više .eq() ni .limit() - povlačimo SVE redove sortirano od najnovijeg ka najstarijem
-            let { data, error } = await supabaseClient
-                .from("RAZGOVORI_TELNYX")
-                .select("*")
-                .order("ID", { ascending: false });
+const { createClient } = supabase;
+const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            if (error) {
-                console.error("Supabase greška:", error);
-                document.getElementById('loading').innerText = "Greška pri učitavanju: " + error.message;
-                return;
+let lessons = [];
+let current = null, questions = [], qIndex = 0, sessionScore = 0, waiting = false, points = 0, completed = [];
+const $ = id => document.getElementById(id);
+
+
+async function loadLessonsFromSupabase() {
+    const lessonGrid = $("lessons");
+    lessonGrid.innerHTML = "<p>⏳ Učitavam lekcije...</p>";
+
+    try {
+        const { data, error } = await _supabase
+            .from("LESSONS")
+            .select("*")
+            .order("id", { ascending: true });
+
+        if (error) throw error;
+
+        console.log("Podaci iz baze:", data);
+
+        const grouped = new Map();
+
+        for (const row of data || []) {
+            const get = (...keys) => {
+                const key = Object.keys(row).find(k =>
+                    keys.some(name => name.toLowerCase() === k.toLowerCase())
+                );
+                return key && row[key] != null
+                    ? String(row[key]).trim()
+                    : "";
+            };
+
+            const name = get("NAZIV");
+            const english = get("LEKCIJE");
+            const bosnian = get("PREVOD");
+
+            if (!name || !english || !bosnian) {
+                console.warn("Nedostaje podatak:", row);
+                continue;
             }
 
-            const container = document.getElementById('all-calls-container');
-            container.innerHTML = '';
+            const id = name.toLocaleLowerCase("bs")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/đ/g, "d")
+                .replace(/[^a-z0-9]+/g, "_")
+                .replace(/^_+|_+$/g, "");
 
-            if (!data || data.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #777;">Tabela je trenutno prazna, nema nijednog zapisa.</p>';
-                document.getElementById('loading').style.display = 'none';
-                return;
+            if (!grouped.has(id)) {
+                grouped.set(id, {
+                    id,
+                    name,
+                    emoji: "📚",
+                    intro: "Nauči riječi za temu: " + name,
+                    words: []
+                });
             }
 
-            // Petlja koja prolazi kroz SVAKI red u tabeli i pravi karticu
-            data.forEach(row => {
-                const card = document.createElement('div');
-                card.className = 'call-card';
-
-                const callId = row.ID ?? 'N/A';
-                const phoneTo = row.TO ?? 'Nepoznato';
-                const status = row.STATUS_POZIVA ?? 'Nepoznato';
-                const audioUrl = row.URL;
-
-                let cardHtml = `
-                    <div class="call-header">
-                        <span>ID Reda: #${callId} &nbsp;|&nbsp; Broj: ${phoneTo}</span>
-                        <span style="font-size: 0.85em; color: #666;">Status: ${status}</span>
-                    </div>
-                    <div style="margin-bottom: 10px;"><strong>Transkript razgovora:</strong></div>
-                `;
-
-                // Parsiranje transkripcije za svaki red posebno
-                let transcriptionArray = [];
-                if (typeof row.TRANSKRIPCIJA === 'string') {
-                    try {
-                        transcriptionArray = JSON.parse(row.TRANSKRIPCIJA);
-                    } catch (e) {
-                        transcriptionArray = [];
-                    }
-                } else if (Array.isArray(row.TRANSKRIPCIJA)) {
-                    transcriptionArray = row.TRANSKRIPCIJA;
-                }
-
-                if (transcriptionArray.length === 0) {
-                    cardHtml += `<p style="color: #999; font-style: italic; font-size: 0.9em;">Nema unesenih poruka (prazno)</p>`;
-                } else {
-                    transcriptionArray.forEach(item => {
-                        const isUser = item.role === 'user';
-                        cardHtml += `
-                            <div class="message ${isUser ? 'user' : 'assistant'}">
-                                <div class="role">${isUser ? 'Korisnik (User)' : 'AI Asistent'}</div>
-                                <div class="text">${escapeHtml(item.text)}</div>
-                            </div>
-                        `;
-                    });
-                }
-
-                // Ako red ima sačuvan audio snimak, ubaci player
-                if (audioUrl) {
-                    cardHtml += `
-                        <div style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 10px;">
-                            <strong>Audio snimak poziva:</strong>
-                            <audio controls src="${audioUrl}"></audio>
-                        </div>
-                    `;
-                }
-
-                card.innerHTML = cardHtml;
-                container.appendChild(card);
-            });
-
-            document.getElementById('loading').style.display = 'none';
-
-        } catch (err) {
-            console.error("Greška:", err);
-            document.getElementById('loading').innerText = "Došlo je do neočekivane greške pri učitavanju.";
+            const words = grouped.get(id).words;
+            if (!words.some(w =>
+                w[0].toLowerCase() === english.toLowerCase() &&
+                w[1].toLowerCase() === bosnian.toLowerCase()
+            )) {
+                words.push([english, bosnian]);
+            }
         }
-    }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
+        lessons = Array.from(grouped.values())
+            .filter(l => l.words.length > 0);
 
-    window.onload = loadAllCalls;
+        console.log("Broj redova:", data?.length);
+        console.log("Broj tema:", lessons.length);
+
+        if (!lessons.length) {
+            lessonGrid.innerHTML =
+                "<p>⚠️ Podaci su učitani, ali kolone NAZIV, LEKCIJE i PREVOD nisu prepoznate. Provjeri konzolu.</p>";
+            return;
+        }
+
+        loadProgress();
+        render();
+
+    } catch (err) {
+        console.error("Greška pri učitavanju:", err);
+        lessonGrid.innerHTML =
+            "<p>❌ Greška: " + String(err.message || err) + "</p>";
+    }
+}
+
+
+function loadProgress() {
+    try {
+        points = Number(localStorage.getItem("engPoints") || 0);
+        completed = JSON.parse(localStorage.getItem("engDone") || "[]");
+        let streak = Number(localStorage.getItem("engStreak") || 0);
+        let today = new Date().toDateString();
+        if (localStorage.getItem("engLastDate") !== today) {
+            streak = streak ? streak + 1 : 1;
+            localStorage.setItem("engLastDate", today);
+            localStorage.setItem("engStreak", String(streak));
+        }
+        $("streak").textContent = "🔥 " + streak + " dana";
+    } catch(e) {}
+}
+
+function saveProgress() {
+    try {
+        localStorage.setItem("engPoints", String(points));
+        localStorage.setItem("engDone", JSON.stringify(completed));
+    } catch(e) {}
+    updateDisplay();
+}
+
+function updateDisplay() {
+    $("points").textContent = points + " ⭐";
+    $("done").textContent = completed.length + " / " + lessons.length;
+    let lvl = "🥉 Brončani";
+    if (points >= 600) lvl = "🥇 Zlatni";
+    else if (points >= 300) lvl = "🥈 Srebrni";
+    $("badgeLevel").textContent = lvl;
+}
+
+function shuffle(arr) {
+    let c = [...arr];
+    for (let i = c.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [c[i], c[j]] = [c[j], c[i]];
+    }
+    return c;
+}
+
+function render() {
+    updateDisplay();
+    $("lessons").innerHTML = lessons.map(l => `
+        <button class="lesson" data-lesson="${l.id}">
+            <span class="emoji">${l.emoji}</span>
+            <b>${l.name}</b>
+            <div style="margin-top:8px;color:#69718d;font-size:13px">${completed.includes(l.id) ? "✅ Završeno" : l.words.length + " riječi"}</div>
+        </button>
+    `).join("");
+    document.querySelectorAll("[data-lesson]").forEach(b => {
+        b.addEventListener("click", () => openLesson(b.dataset.lesson));
+    });
+}
+
+function openLesson(id) {
+    current = lessons.find(l => l.id === id);
+    if (!current) return;
+    $("lessonTitle").textContent = current.emoji + " " + current.name;
+    $("lessonIntro").textContent = current.intro;
+    $("words").innerHTML = current.words.map((w, i) => `
+        <div class="word">
+            <div><b>${w[0]}</b><br><span>${w[1]}</span></div>
+            <button class="sound" data-word="${i}">🔊 Slušaj</button>
+        </div>
+    `).join("");
+    $("words").querySelectorAll("[data-word]").forEach(b => {
+        b.addEventListener("click", () => speak(current.words[Number(b.dataset.word)][0]));
+    });
+    $("study").classList.remove("hidden");
+    $("quiz").classList.add("hidden");
+    $("study").scrollIntoView({ behavior:"smooth" });
+}
+
+function speak(w) {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    let v = new SpeechSynthesisUtterance(w);
+    v.lang = "en-GB"; v.rate = 0.8;
+    window.speechSynthesis.speak(v);
+}
+
+function startQuiz() {
+    if (!current) return;
+    questions = shuffle(current.words).map(w => ({en:w[0], bs:w[1], typing:false}))
+        .concat(shuffle(current.words).map(w => ({en:w[0], bs:w[1], typing:true})));
+    qIndex = 0; sessionScore = 0; waiting = false;
+    $("quiz").classList.remove("hidden");
+    $("study").classList.add("hidden");
+    showQuestion();
+}
+
+function showQuestion() {
+    waiting = false;
+    $("feedback").textContent = "";
+    $("next").classList.add("hidden");
+    $("typedAnswer").value = "";
+    $("typedAnswer").disabled = false;
+    $("checkTyped").disabled = false;
+    let q = questions[qIndex];
+    if (!q.typing) {
+        $("question").textContent = `Pitanje ${qIndex + 1}/${questions.length}: Šta znači "${q.en}"?`;
+        $("typingArea").classList.add("hidden");
+        $("answers").classList.remove("hidden");
+        let wrong = shuffle(current.words.filter(w => w[1] !== q.bs).map(w => w[1])).slice(0, 3);
+        let choices = shuffle([q.bs, ...wrong]);
+        $("answers").innerHTML = choices.map((c, i) => `<button class="answer" data-answer="${i}">${c}</button>`).join("");
+        $("answers").querySelectorAll("[data-answer]").forEach((b, i) => {
+            b.addEventListener("click", () => checkAnswer(b, choices[i], q.bs));
+        });
+    } else {
+        $("question").textContent = `Pitanje ${qIndex + 1}/${questions.length}: Kako se kaže na engleskom?`;
+        $("answers").classList.add("hidden");
+        $("typingArea").classList.remove("hidden");
+        $("typingWord").textContent = q.bs;
+        $("typedAnswer").focus();
+    }
+}
+
+function checkAnswer(btn, choice, correct) {
+    if (waiting) return;
+    waiting = true;
+    document.querySelectorAll("#answers button").forEach(b => b.disabled = true);
+    if (choice === correct) {
+        btn.style.backgroundColor = "#d9fbe5";
+        $("feedback").style.color = "#168044";
+        $("feedback").textContent = "✅ Tačno! +10 bodova 🌟";
+        sessionScore++; points += 10;
+    } else {
+        btn.style.backgroundColor = "#ffe3e3";
+        $("feedback").style.color = "#c03939";
+        $("feedback").textContent = "❌ Tačan odgovor je: " + correct;
+    }
+    saveProgress();
+    $("next").classList.remove("hidden");
+}
+
+function checkTyped() {
+    if (waiting) return;
+    let ans = $("typedAnswer").value.trim();
+    if (!ans) return;
+    waiting = true;
+    $("typedAnswer").disabled = true;
+    $("checkTyped").disabled = true;
+    let correct = questions[qIndex].en;
+    if (ans.toLowerCase() === correct.toLowerCase()) {
+        $("feedback").style.color = "#168044";
+        $("feedback").textContent = "✅ Tačno! +10 bodova 🌟";
+        sessionScore++; points += 10;
+    } else {
+        $("feedback").style.color = "#c03939";
+        $("feedback").textContent = "❌ Tačan odgovor je: " + correct;
+    }
+    saveProgress();
+    $("next").classList.remove("hidden");
+}
+
+$("next").addEventListener("click", () => {
+    if (qIndex < questions.length - 1) {
+        qIndex++; showQuestion();
+    } else {
+        if (!completed.includes(current.id)) completed.push(current.id);
+        saveProgress();
+        $("question").textContent = "🎉 Završio/la si lekciju!";
+        $("answers").innerHTML = ""; $("typingArea").classList.add("hidden");
+        $("feedback").textContent = `Osvojio/la si ${sessionScore * 10} bodova!`;
+        $("next").classList.add("hidden");
+        render();
+    }
+});
+
+$("startQuiz").addEventListener("click", startQuiz);
+$("wellDone").addEventListener("click", () => speak("Well done!"));
+$("checkTyped").addEventListener("click", checkTyped);
+$("clearLetters").addEventListener("click", () => {
+    if (waiting) return;
+    window.adventurePicked = [];
+    $("feedback").textContent = "";
+    renderAdventureLetters();
+});
+
+$("hearWord").addEventListener("click", () => {
+    if (questions[qIndex]) speak(questions[qIndex].en);
+});    
+$("backHome").addEventListener("click", () => { $("study").classList.add("hidden"); $("quiz").classList.add("hidden"); window.scrollTo({top: 0, behavior: "smooth"}); });
+$("backFromQuiz").addEventListener("click", () => { $("quiz").classList.add("hidden"); $("study").classList.add("hidden"); window.scrollTo({top: 0, behavior: "smooth"}); });
+
+// Pokretanje učitavanja iz baze
+loadLessonsFromSupabase();
 </script>
-
 </body>
 </html>

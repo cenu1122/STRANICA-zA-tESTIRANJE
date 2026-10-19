@@ -36,6 +36,141 @@ button { touch-action: manipulation; }
 #typedAnswer { width: 100%; padding: 14px; border: 2px solid #dce2f7; border-radius: 12px; margin: 10px 0; font-size: 18px; }
 footer { text-align: center; color: #6b7190; padding: 25px; }
 @media(max-width:450px) { main { padding: 12px; } .answers { grid-template-columns: 1fr; } }
+
+/* Animirani čarobnjak */
+.wiz-adventure {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 16px;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #e8eaff, #fff1cc);
+    box-shadow: 0 6px 20px #26346a18;
+}
+
+.wiz-character {
+    font-size: 76px;
+    text-align: center;
+    animation: wizFloat 2.5s ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+@keyframes wizFloat {
+    0%, 100% { transform: translateY(0) rotate(-4deg); }
+    50% { transform: translateY(-12px) rotate(4deg); }
+}
+
+.wiz-message {
+    padding: 13px;
+    background: white;
+    border-radius: 16px;
+    line-height: 1.5;
+    margin: 10px 0;
+}
+
+.wiz-sparkles {
+    display: inline-block;
+    animation: sparkle 1.6s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: .45; transform: scale(.9); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.adventure-worlds {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    margin: 16px 0 24px;
+}
+
+.world-card {
+    background: white;
+    border: 2px solid #dfe5ff;
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 4px 0 #dfe5ff;
+}
+
+.world-card.world-open {
+    border-color: #9b83ed;
+    animation: worldAppear .45s ease-out;
+}
+
+@keyframes worldAppear {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.world-card.world-locked {
+    background: #f0f1f7;
+    color: #777d93;
+}
+
+.world-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.world-icon {
+    font-size: 34px;
+}
+
+.world-progress {
+    height: 9px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #e8eaf5;
+    margin: 10px 0;
+}
+
+.world-progress-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #40c98b, #76d9b0);
+    transition: width .5s ease;
+}
+
+.world-mission {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 11px;
+    border: 1px solid #e0e5fa;
+    border-radius: 12px;
+    background: #f8f9ff;
+    text-align: left;
+    cursor: pointer;
+    color: #202747;
+}
+
+.world-mission:hover:not(:disabled) {
+    background: #e9edff;
+}
+
+.world-mission:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+@media (max-width: 480px) {
+    .wiz-adventure {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .wiz-character {
+        font-size: 68px;
+    }
+}
+
 </style>
 <!-- Supabase skripta -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -59,9 +194,32 @@ footer { text-align: center; color: #6b7190; padding: 25px; }
     <a href="roditelji.html" class="action" style="background:#8b5ce8;">👨‍👩‍👧 Pregled za roditelje</a>
   </div>
 
-  <h2>📚 Izaberi lekciju</h2>
-  <p>Klikni na temu, nauči riječi i isprobaj svoje znanje!</p>
-  <div class="lessons" id="lessons"></div>
+  
+<section class="wiz-adventure">
+    <div class="wiz-character" aria-label="Čarobnjak Wiz">🧙‍♂️</div>
+    <div>
+        <h2>Čarobnjak Wiz <span class="wiz-sparkles">✨</span></h2>
+        <div id="wizMessage" class="wiz-message" aria-live="polite">
+            Zdravo, pustolove! Završi misije i otključaj nove svjetove!
+            <br><i>Hello, adventurer! Let's unlock new worlds!</i>
+        </div>
+        <button class="action" id="wizTalk" type="button">
+            🔊 Poslušaj Wiz-a
+        </button>
+        <button class="action" id="wizStart" type="button"
+            style="background:#8b5ce8">
+            🗺️ Prikaži avanturu
+        </button>
+    </div>
+</section>
+
+<h2>🗺️ Svjetovi English Adventure</h2>
+<p>Završi sve lekcije u jednom svijetu da otključaš sljedeći!</p>
+<div id="adventureMap" class="adventure-worlds"></div>
+
+<!-- Skriveni spremnik koji koristi postojeći render() -->
+<div class="lessons hidden" id="lessons"></div>
+
 
   <section class="panel hidden" id="study">
     <h2 id="lessonTitle">Lekcija</h2>
@@ -239,6 +397,110 @@ function render() {
     document.querySelectorAll("[data-lesson]").forEach(b => {
         b.addEventListener("click", () => openLesson(b.dataset.lesson));
     });
+  renderAdventureMap();
+}
+
+function renderAdventureMap() {
+    const map = $("adventureMap");
+    if (!map) return;
+
+    map.innerHTML = "";
+
+    // Grupisanje postojećih tema u svjetove od po 4 teme.
+    const worldNames = [
+        { name: "Čarobna šuma", icon: "🌳", desc: "Započni svoju avanturu!" },
+        { name: "Ostrvo blaga", icon: "🏝️", desc: "Otkrij nove riječi!" },
+        { name: "Zmajeva planina", icon: "🐉", desc: "Postani majstor engleskog!" },
+        { name: "Svemirska stanica", icon: "🚀", desc: "Do zvijezda i novih znanja!" },
+        { name: "Ledena palača", icon: "🏰", desc: "Nastavi svoju pustolovinu!" }
+    ];
+
+    const worldSize = 4;
+    const worlds = [];
+
+    for (let i = 0; i < lessons.length; i += worldSize) {
+        worlds.push(lessons.slice(i, i + worldSize));
+    }
+
+    worlds.forEach((worldLessons, worldIndex) => {
+        const info = worldNames[worldIndex % worldNames.length];
+
+        // Prvi svijet je otvoren.
+        // Svaki sljedeći traži završetak svih lekcija prethodnog svijeta.
+        const previousWorld = worldIndex > 0
+            ? worlds[worldIndex - 1]
+            : [];
+
+        const unlocked = worldIndex === 0 ||
+            previousWorld.every(lesson => completed.includes(lesson.id));
+
+        const finishedCount = worldLessons.filter(
+            lesson => completed.includes(lesson.id)
+        ).length;
+
+        const progress = worldLessons.length
+            ? Math.round(finishedCount / worldLessons.length * 100)
+            : 0;
+
+        const card = document.createElement("section");
+        card.className = "world-card " +
+            (unlocked ? "world-open" : "world-locked");
+
+        const heading = document.createElement("div");
+        heading.className = "world-heading";
+
+        const icon = document.createElement("span");
+        icon.className = "world-icon";
+        icon.textContent = unlocked ? info.icon : "🔒";
+
+        const title = document.createElement("span");
+        title.textContent = `Svijet ${worldIndex + 1}: ${info.name}`;
+
+        heading.append(icon, title);
+        card.appendChild(heading);
+
+        const description = document.createElement("p");
+        description.textContent = unlocked
+            ? info.desc
+            : "Završi prethodni svijet da ga otključaš.";
+        card.appendChild(description);
+
+        const progressLabel = document.createElement("small");
+        progressLabel.textContent =
+            `Napredak: ${finishedCount}/${worldLessons.length} lekcija`;
+        card.appendChild(progressLabel);
+
+        const progressBar = document.createElement("div");
+        progressBar.className = "world-progress";
+
+        const fill = document.createElement("div");
+        fill.className = "world-progress-fill";
+        fill.style.width = progress + "%";
+        progressBar.appendChild(fill);
+        card.appendChild(progressBar);
+
+        worldLessons.forEach(lesson => {
+            const done = completed.includes(lesson.id);
+            const mission = document.createElement("button");
+
+            mission.type = "button";
+            mission.className = "world-mission";
+            mission.disabled = !unlocked;
+
+            mission.textContent =
+                (done ? "✅ " : unlocked ? "⭐ " : "🔒 ") +
+                lesson.name + ` (${lesson.words.length} riječi)`;
+
+            mission.addEventListener("click", () => {
+                if (!unlocked) return;
+                openLesson(lesson.id);
+            });
+
+            card.appendChild(mission);
+        });
+
+        map.appendChild(card);
+    });
 }
 
 function openLesson(id) {
@@ -373,6 +635,51 @@ $("hearWord").addEventListener("click", () => {
 $("backHome").addEventListener("click", () => { $("study").classList.add("hidden"); $("quiz").classList.add("hidden"); window.scrollTo({top: 0, behavior: "smooth"}); });
 $("backFromQuiz").addEventListener("click", () => { $("quiz").classList.add("hidden"); $("study").classList.add("hidden"); window.scrollTo({top: 0, behavior: "smooth"}); });
 
+const wizGreetings = [
+    {
+        bs: "Zdravo, pustolove! Ja sam Wiz. Hajde da učimo engleski!",
+        en: "Hello, adventurer! I am Wiz. Let's learn English!"
+    },
+    {
+        bs: "Svaka završena lekcija donosi te bliže novom svijetu!",
+        en: "Every completed lesson brings you closer to a new world!"
+    },
+    {
+        bs: "Klikni na otvorenu misiju i osvoji zvjezdice!",
+        en: "Choose an open mission and earn stars!"
+    },
+    {
+        bs: "Vjerujem u tebe! You can do it!",
+        en: "You can do it!"
+    }
+];
+
+let wizGreetingIndex = 0;
+
+$("wizTalk").addEventListener("click", () => {
+    const message = wizGreetings[wizGreetingIndex];
+
+    $("wizMessage").textContent = message.bs + " " + message.en;
+    speak(message.en);
+
+    wizGreetingIndex =
+        (wizGreetingIndex + 1) % wizGreetings.length;
+});
+
+$("wizStart").addEventListener("click", () => {
+    $("adventureMap").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+    $("wizMessage").textContent =
+        "Tvoja avantura počinje! Your adventure starts now!";
+
+    speak("Your adventure starts now!");
+});
+
+
+  
 // Pokretanje učitavanja iz baze
 loadLessonsFromSupabase();
 </script>

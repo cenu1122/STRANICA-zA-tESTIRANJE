@@ -3,684 +3,759 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Engleski kroz igru!</title>
-<style>
-:root { --blue: #315bea; --ink: #202747; --bg: #f4f6ff; }
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); font-family: Arial, sans-serif; color: var(--ink); }
-header { background: linear-gradient(120deg,#315bea,#8b5ce8); color: white; padding: 28px 16px; text-align: center; }
-header h1 { margin: 0 0 10px; font-size: clamp(26px,5vw,42px); }
-main { max-width: 1000px; margin: auto; padding: 18px; }
-.stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-.stat { flex: 1; min-width: 130px; background: white; border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 3px 12px #26346a12; }
-.stat strong { display: block; font-size: 20px; color: var(--blue); margin-bottom: 5px; }
-.lessons { display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 12px; }
-.lesson { border: 0; background: white; border-radius: 18px; padding: 20px 10px; text-align: center; cursor: pointer; box-shadow: 0 3px 12px #26346a12; color: var(--ink); font-size: 16px; }
-.lesson:hover { transform: translateY(-2px); }
-.emoji { display: block; font-size: 34px; margin-bottom: 10px; }
-.panel { background: white; border-radius: 20px; padding: 22px; margin-top: 20px; box-shadow: 0 3px 15px #26346a12; }
-.hidden { display: none !important; }
-.word { background: #f0f3ff; border-radius: 16px; padding: 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.word b { font-size: 21px; }
-button, input { font: inherit; }
-button { touch-action: manipulation; }
-.action { background: var(--blue); color: white; border: 0; border-radius: 12px; padding: 13px 16px; cursor: pointer; font-weight: bold; margin: 4px 3px 4px 0; text-decoration: none; display: inline-block; text-align: center; }
-.sound { border: 0; background: #e6ebff; border-radius: 12px; padding: 11px 13px; cursor: pointer; }
-.extra-modes { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
-#question { font-size: 22px; font-weight: bold; margin: 18px 0; }
-.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.answer { padding: 15px; border: 2px solid #e0e5fa; border-radius: 12px; background: white; cursor: pointer; font-size: 16px; }
-.answer:disabled { cursor: default; }
-#feedback { font-weight: bold; min-height: 28px; margin: 15px 0; line-height: 1.5; }
-#typingWord { font-size: 30px; font-weight: bold; text-align: center; background: #f0f3ff; border-radius: 16px; padding: 22px; margin: 15px 0; }
-#typedAnswer { width: 100%; padding: 14px; border: 2px solid #dce2f7; border-radius: 12px; margin: 10px 0; font-size: 18px; }
-footer { text-align: center; color: #6b7190; padding: 25px; }
-@media(max-width:450px) { main { padding: 12px; } .answers { grid-template-columns: 1fr; } }
-
-/* Animirani čarobnjak */
-.wiz-adventure {
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 16px;
-    align-items: center;
-    margin: 20px 0;
-    padding: 20px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, #e8eaff, #fff1cc);
-    box-shadow: 0 6px 20px #26346a18;
-}
-
-.wiz-character {
-    font-size: 76px;
-    text-align: center;
-    animation: wizFloat 2.5s ease-in-out infinite;
-    transform-origin: center bottom;
-}
-
-@keyframes wizFloat {
-    0%, 100% { transform: translateY(0) rotate(-4deg); }
-    50% { transform: translateY(-12px) rotate(4deg); }
-}
-
-.wiz-message {
-    padding: 13px;
-    background: white;
-    border-radius: 16px;
-    line-height: 1.5;
-    margin: 10px 0;
-}
-
-.wiz-sparkles {
-    display: inline-block;
-    animation: sparkle 1.6s ease-in-out infinite;
-}
-
-@keyframes sparkle {
-    0%, 100% { opacity: .45; transform: scale(.9); }
-    50% { opacity: 1; transform: scale(1.2); }
-}
-
-.adventure-worlds {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 14px;
-    margin: 16px 0 24px;
-}
-
-.world-card {
-    background: white;
-    border: 2px solid #dfe5ff;
-    border-radius: 20px;
-    padding: 16px;
-    box-shadow: 0 4px 0 #dfe5ff;
-}
-
-.world-card.world-open {
-    border-color: #9b83ed;
-    animation: worldAppear .45s ease-out;
-}
-
-@keyframes worldAppear {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.world-card.world-locked {
-    background: #f0f1f7;
-    color: #777d93;
-}
-
-.world-heading {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 8px;
-}
-
-.world-icon {
-    font-size: 34px;
-}
-
-.world-progress {
-    height: 9px;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #e8eaf5;
-    margin: 10px 0;
-}
-
-.world-progress-fill {
-    height: 100%;
-    width: 0;
-    background: linear-gradient(90deg, #40c98b, #76d9b0);
-    transition: width .5s ease;
-}
-
-.world-mission {
-    display: block;
-    width: 100%;
-    margin-top: 8px;
-    padding: 11px;
-    border: 1px solid #e0e5fa;
-    border-radius: 12px;
-    background: #f8f9ff;
-    text-align: left;
-    cursor: pointer;
-    color: #202747;
-}
-
-.world-mission:hover:not(:disabled) {
-    background: #e9edff;
-}
-
-.world-mission:disabled {
-    cursor: not-allowed;
-    opacity: .55;
-}
-
-@media (max-width: 480px) {
-    .wiz-adventure {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-
-    .wiz-character {
-        font-size: 68px;
-    }
-}
-
-</style>
-<!-- Supabase skripta -->
+<title>English Adventure</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --blue: #315bea;
+  --purple: #8b5ce8;
+  --bg: #f4f6ff;
+  --ink: #202747;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+header {
+  background: linear-gradient(120deg, var(--blue), var(--purple));
+  color: white;
+  text-align: center;
+  padding: 28px 15px;
+}
+header h1 { margin: 0 0 10px; font-size: clamp(28px, 5vw, 42px); }
+main { max-width: 1050px; padding: 16px; margin: auto; }
+button { font: inherit; cursor: pointer; touch-action: manipulation; }
+.hidden { display: none !important; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.stat, .panel {
+  background: white;
+  padding: 17px;
+  border-radius: 18px;
+  box-shadow: 0 4px 14px #25376b12;
+}
+.stat { text-align: center; }
+.stat strong { display: block; color: var(--blue); font-size: 21px; margin-bottom: 6px; }
+
+.action {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: var(--blue);
+  color: white;
+  font-weight: bold;
+  margin: 4px 3px 4px 0;
+}
+.secondary {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px;
+  background: #e8ebff;
+  color: var(--ink);
+  margin: 4px 3px 4px 0;
+}
+
+.wiz-adventure {
+  display: grid;
+  grid-template-columns: 105px 1fr;
+  gap: 15px;
+  align-items: center;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #e5eaff, #fff0c9);
+}
+.wiz-character {
+  text-align: center;
+  font-size: 75px;
+  animation: float 2.5s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-12px) rotate(4deg); }
+}
+.wiz-message {
+  background: white;
+  border-radius: 14px;
+  padding: 12px;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+.sparkle { animation: sparkle 1.5s infinite; display: inline-block; }
+@keyframes sparkle {
+  50% { transform: scale(1.3); opacity: .6; }
+}
+
+.worlds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+  margin: 16px 0 25px;
+}
+.world-card {
+  background: white;
+  padding: 16px;
+  border-radius: 20px;
+  border: 2px solid #dfe4ff;
+  box-shadow: 0 4px 0 #dfe4ff;
+}
+.world-card.locked { background: #f0f1f7; color: #777d93; }
+.world-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+.world-icon { font-size: 32px; margin-right: 8px; }
+.progress {
+  height: 9px;
+  background: #e8eaf5;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.progress-fill {
+  height: 100%;
+  background: #43c98b;
+  transition: width .3s;
+}
+.mission {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  border-radius: 12px;
+  margin-top: 8px;
+  border: 1px solid #e0e5fa;
+  background: #f8f9ff;
+  color: var(--ink);
+}
+.mission:disabled { opacity: .5; cursor: not-allowed; }
+
+.panel { margin: 18px 0; }
+.word {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 14px;
+  background: #f0f3ff;
+}
+.word b { font-size: 20px; }
+
+#question { font-size: 21px; font-weight: bold; margin: 20px 0; }
+.answers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.answer {
+  border: 2px solid #dfe4ff;
+  border-radius: 13px;
+  padding: 15px;
+  background: white;
+  color: var(--ink);
+}
+.answer:disabled { cursor: default; }
+
+#typingWord {
+  text-align: center;
+  font-size: 25px;
+  font-weight: bold;
+  padding: 18px;
+  margin: 14px 0;
+  border-radius: 14px;
+  background: #f0f3ff;
+}
+#letterAnswer {
+  min-height: 56px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 10px;
+  margin: 12px 0;
+  border: 2px dashed var(--purple);
+  border-radius: 14px;
+  background: #fafaff;
+}
+#letterBank {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0;
+}
+.letter {
+  min-width: 42px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 2px solid #dfe4ff;
+  border-radius: 11px;
+  background: white;
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: bold;
+  box-shadow: 0 3px 0 #dfe4ff;
+}
+.letter:disabled { opacity: .3; box-shadow: none; }
+#letterAnswer .letter { background: #e8ebff; }
+#feedback { min-height: 30px; margin: 15px 0; font-weight: bold; line-height: 1.5; }
+footer { text-align: center; padding: 25px; color: #6b7190; }
+
+@media (max-width: 500px) {
+  main { padding: 11px; }
+  .wiz-adventure { grid-template-columns: 1fr; text-align: center; }
+  .wiz-character { font-size: 65px; }
+  .answers { grid-template-columns: 1fr; }
+}
+</style>
 </head>
+
 <body>
 <header>
-  <h1>🌟 Engleski kroz igru!</h1>
-  <p>Learn English with fun — Uči engleski kroz zabavu!</p>
+  <h1>🌟 English Adventure!</h1>
+  <p>Učimo engleski kroz igru!</p>
 </header>
+
 <main>
   <div class="stats">
     <div class="stat"><strong id="points">0 ⭐</strong>Bodovi</div>
     <div class="stat"><strong id="done">0 / 0</strong>Završene lekcije</div>
-    <div class="stat"><strong id="streak">🔥 0 dana</strong>Niz učenja</div>
-    <div class="stat"><strong id="badgeLevel">🥉 Brončani</strong>Nivo</div>
+    <div class="stat"><strong id="level">🥉 Početnik</strong>Nivo</div>
   </div>
 
-  <div class="extra-modes">
-    <a href="dnevni_izazov.html" class="action">🎯 Dnevni izazov</a>
-    <a href="spajanje.html" class="action">🧩 Igra spajanja</a>
-    <a href="roditelji.html" class="action" style="background:#8b5ce8;">👨‍👩‍👧 Pregled za roditelje</a>
-  </div>
-
-  
-<section class="wiz-adventure">
-    <div class="wiz-character" aria-label="Čarobnjak Wiz">🧙‍♂️</div>
+  <section class="wiz-adventure">
+    <div class="wiz-character">🧙‍♂️</div>
     <div>
-        <h2>Čarobnjak Wiz <span class="wiz-sparkles">✨</span></h2>
-        <div id="wizMessage" class="wiz-message" aria-live="polite">
-            Zdravo, pustolove! Završi misije i otključaj nove svjetove!
-            <br><i>Hello, adventurer! Let's unlock new worlds!</i>
-        </div>
-        <button class="action" id="wizTalk" type="button">
-            🔊 Poslušaj Wiz-a
-        </button>
-        <button class="action" id="wizStart" type="button"
-            style="background:#8b5ce8">
-            🗺️ Prikaži avanturu
-        </button>
+      <h2>Čarobnjak Wiz <span class="sparkle">✨</span></h2>
+      <div id="wizMessage" class="wiz-message">
+        Zdravo, pustolove! Hajde da učimo engleski!
+        <br><i>Hello, adventurer! Let's learn English!</i>
+      </div>
+      <button class="action" id="wizTalk">🔊 Poslušaj Wiza</button>
+      <button class="action" id="wizStart" style="background:#8b5ce8">🗺️ Prikaži avanturu</button>
     </div>
-</section>
+  </section>
 
-<h2>🗺️ Svjetovi English Adventure</h2>
-<p>Završi sve lekcije u jednom svijetu da otključaš sljedeći!</p>
-<div id="adventureMap" class="adventure-worlds"></div>
+  <h2>🗺️ Svjetovi English Adventure</h2>
+  <p>Završi sve lekcije u jednom svijetu da otključaš sljedeći!</p>
+  <p id="status">⏳ Učitavam lekcije...</p>
+  <div id="adventureMap" class="worlds"></div>
 
-<!-- Skriveni spremnik koji koristi postojeći render() -->
-<div class="lessons hidden" id="lessons"></div>
-
-
-  <section class="panel hidden" id="study">
+  <section id="study" class="panel hidden">
     <h2 id="lessonTitle">Lekcija</h2>
     <p id="lessonIntro"></p>
     <div id="words"></div>
     <button class="action" id="startQuiz">🎯 Započni kviz</button>
-    <button class="sound" id="wellDone">🔊 Well done!</button>
-    <button class="sound" id="backHome">← Sve lekcije</button>
+    <button class="secondary" id="backHome">← Povratak na svjetove</button>
   </section>
 
-  <section class="panel hidden" id="quiz">
+  <section id="quiz" class="panel hidden">
     <h2>🧠 Vrijeme za kviz!</h2>
     <div id="question"></div>
-    <div class="answers" id="answers"></div>
+    <div id="answers" class="answers"></div>
+
     <div id="typingArea" class="hidden">
       <div id="typingWord"></div>
-      <label for="typedAnswer"><b>✍️ Napiši riječ na engleskom:</b></label>
-      <input id="typedAnswer" type="text" placeholder="Upiši riječ na engleskom..." autocomplete="off">
+      <b>🔤 Klikni slova da sastaviš englesku riječ:</b>
+      <div id="letterAnswer"></div>
+      <div id="letterBank"></div>
       <button class="action" id="checkTyped">Provjeri odgovor ✓</button>
+      <button class="secondary" id="clearLetters">🧹 Obriši slova</button>
+      <button class="secondary" id="hearWord">🔊 Poslušaj riječ</button>
     </div>
+
     <div id="feedback" aria-live="polite"></div>
     <button class="action hidden" id="next">Sljedeće ➜</button>
-    <button class="sound" id="backFromQuiz">← Sve lekcije</button>
+    <button class="secondary" id="backFromQuiz">← Povratak na svjetove</button>
   </section>
 </main>
+
 <footer>💛 Mali koraci, velike riječi! Keep learning!</footer>
 
 <script>
-// Supabase konekcija sa tvojim podacima
+/* SUPABASE POVEZIVANJE */
 const SUPABASE_URL = 'https://lvvidixbdtdjfwxxxqzr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_DMELD0DRGcKD9u12lowjgw_sPBaLqhT';
 
-const { createClient } = supabase;
-const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+/* OVDJE ZALIJEPI SVOJ POSTOJEĆI SUPABASE PUBLISHABLE KEY */
+const SUPABASE_KEY = 'ZALIJEPI_SVOJ_POSTOJECI_PUBLISHABLE_KEY';
 
-let lessons = [];
-let current = null, questions = [], qIndex = 0, sessionScore = 0, waiting = false, points = 0, completed = [];
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 
+let lessons = [];
+let current = null;
+let questions = [];
+let qIndex = 0;
+let sessionScore = 0;
+let points = 0;
+let completed = [];
+let pickedLetters = [];
+let waiting = false;
 
-async function loadLessonsFromSupabase() {
-    const lessonGrid = $("lessons");
-    lessonGrid.innerHTML = "<p>⏳ Učitavam lekcije...</p>";
+const worldNames = [
+  {name:'Čarobna šuma',icon:'🌳',desc:'Započni svoju avanturu!'},
+  {name:'Ostrvo blaga',icon:'🏝️',desc:'Otkrij nove riječi!'},
+  {name:'Zmajeva planina',icon:'🐉',desc:'Postani majstor engleskog!'},
+  {name:'Svemirska stanica',icon:'🚀',desc:'Do zvijezda i novih znanja!'},
+  {name:'Ledena palača',icon:'🏰',desc:'Nastavi svoju pustolovinu!'}
+];
 
-    try {
-        const { data, error } = await _supabase
-            .from("LESSONS")
-            .select("*")
-            .order("id", { ascending: true });
-
-        if (error) throw error;
-
-        console.log("Podaci iz baze:", data);
-
-        const grouped = new Map();
-
-        for (const row of data || []) {
-            const get = (...keys) => {
-                const key = Object.keys(row).find(k =>
-                    keys.some(name => name.toLowerCase() === k.toLowerCase())
-                );
-                return key && row[key] != null
-                    ? String(row[key]).trim()
-                    : "";
-            };
-
-            const name = get("NAZIV");
-            const english = get("LEKCIJE");
-            const bosnian = get("PREVOD");
-
-            if (!name || !english || !bosnian) {
-                console.warn("Nedostaje podatak:", row);
-                continue;
-            }
-
-            const id = name.toLocaleLowerCase("bs")
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .replace(/đ/g, "d")
-                .replace(/[^a-z0-9]+/g, "_")
-                .replace(/^_+|_+$/g, "");
-
-            if (!grouped.has(id)) {
-                grouped.set(id, {
-                    id,
-                    name,
-                    emoji: "📚",
-                    intro: "Nauči riječi za temu: " + name,
-                    words: []
-                });
-            }
-
-            const words = grouped.get(id).words;
-            if (!words.some(w =>
-                w[0].toLowerCase() === english.toLowerCase() &&
-                w[1].toLowerCase() === bosnian.toLowerCase()
-            )) {
-                words.push([english, bosnian]);
-            }
-        }
-
-        lessons = Array.from(grouped.values())
-            .filter(l => l.words.length > 0);
-
-        console.log("Broj redova:", data?.length);
-        console.log("Broj tema:", lessons.length);
-
-        if (!lessons.length) {
-            lessonGrid.innerHTML =
-                "<p>⚠️ Podaci su učitani, ali kolone NAZIV, LEKCIJE i PREVOD nisu prepoznate. Provjeri konzolu.</p>";
-            return;
-        }
-
-        loadProgress();
-        render();
-
-    } catch (err) {
-        console.error("Greška pri učitavanju:", err);
-        lessonGrid.innerHTML =
-            "<p>❌ Greška: " + String(err.message || err) + "</p>";
-    }
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
 }
 
+function shuffle(items) {
+  const a = [...items];
+  for (let i=a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function speak(text) {
+  if (!('speechSynthesis' in window)) {
+    alert('Ovaj preglednik ne podržava čitanje naglas.');
+    return;
+  }
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-GB';
+  utterance.rate = 0.8;
+  speechSynthesis.speak(utterance);
+}
 
 function loadProgress() {
-    try {
-        points = Number(localStorage.getItem("engPoints") || 0);
-        completed = JSON.parse(localStorage.getItem("engDone") || "[]");
-        let streak = Number(localStorage.getItem("engStreak") || 0);
-        let today = new Date().toDateString();
-        if (localStorage.getItem("engLastDate") !== today) {
-            streak = streak ? streak + 1 : 1;
-            localStorage.setItem("engLastDate", today);
-            localStorage.setItem("engStreak", String(streak));
-        }
-        $("streak").textContent = "🔥 " + streak + " dana";
-    } catch(e) {}
+  try {
+    points = Number(localStorage.getItem('engPoints') || 0);
+    completed = JSON.parse(localStorage.getItem('engDone') || '[]');
+    if (!Array.isArray(completed)) completed = [];
+  } catch(e) {
+    points = 0;
+    completed = [];
+  }
+  updateDisplay();
 }
 
 function saveProgress() {
-    try {
-        localStorage.setItem("engPoints", String(points));
-        localStorage.setItem("engDone", JSON.stringify(completed));
-    } catch(e) {}
-    updateDisplay();
+  try {
+    localStorage.setItem('engPoints', String(points));
+    localStorage.setItem('engDone', JSON.stringify(completed));
+  } catch(e) {}
+  updateDisplay();
 }
 
 function updateDisplay() {
-    $("points").textContent = points + " ⭐";
-    $("done").textContent = completed.length + " / " + lessons.length;
-    let lvl = "🥉 Brončani";
-    if (points >= 600) lvl = "🥇 Zlatni";
-    else if (points >= 300) lvl = "🥈 Srebrni";
-    $("badgeLevel").textContent = lvl;
+  $('points').textContent = points + ' ⭐';
+  $('done').textContent = completed.filter(id => lessons.some(l=>l.id===id)).length + ' / ' + lessons.length;
+  $('level').textContent = points >= 500 ? '🥇 Zlatni' : points >= 200 ? '🥈 Srebrni' : '🥉 Početnik';
 }
 
-function shuffle(arr) {
-    let c = [...arr];
-    for (let i = c.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        [c[i], c[j]] = [c[j], c[i]];
+async function loadLessonsFromSupabase() {
+  $('status').textContent = '⏳ Povezujem se s bazom...';
+
+  try {
+    const {data,error} = await db
+      .from('LESSONS')
+      .select('*')
+      .order('id', {ascending:true});
+
+    if (error) throw error;
+
+    const grouped = new Map();
+
+    for (const row of data || []) {
+      const get = name => {
+        const key = Object.keys(row).find(k => k.toLowerCase() === name.toLowerCase());
+        return key && row[key] != null ? String(row[key]).trim() : '';
+      };
+
+      const name = get('NAZIV');
+      const en = get('LEKCIJE');
+      const bs = get('PREVOD');
+
+      if (!name || !en || !bs) continue;
+
+      const id = name.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'_')
+        .replace(/^_+|_+$/g,'');
+
+      if (!grouped.has(id)) {
+        grouped.set(id, {
+          id,
+          name,
+          emoji:'📚',
+          intro:'Nauči riječi za temu: ' + name,
+          words:[]
+        });
+      }
+
+      const lesson = grouped.get(id);
+      if (!lesson.words.some(w =>
+        w[0].toLowerCase() === en.toLowerCase() &&
+        w[1].toLowerCase() === bs.toLowerCase()
+      )) {
+        lesson.words.push([en,bs]);
+      }
     }
-    return c;
-}
 
-function render() {
-    updateDisplay();
-    $("lessons").innerHTML = lessons.map(l => `
-        <button class="lesson" data-lesson="${l.id}">
-            <span class="emoji">${l.emoji}</span>
-            <b>${l.name}</b>
-            <div style="margin-top:8px;color:#69718d;font-size:13px">${completed.includes(l.id) ? "✅ Završeno" : l.words.length + " riječi"}</div>
-        </button>
-    `).join("");
-    document.querySelectorAll("[data-lesson]").forEach(b => {
-        b.addEventListener("click", () => openLesson(b.dataset.lesson));
-    });
-  renderAdventureMap();
+    lessons = Array.from(grouped.values()).filter(l=>l.words.length);
+    loadProgress();
+
+    if (!lessons.length) {
+      $('status').textContent = 'Nema lekcija. Provjeri nazive kolona NAZIV, LEKCIJE i PREVOD.';
+      return;
+    }
+
+    $('status').textContent = '✅ Učitano lekcija: ' + lessons.length;
+    renderAdventureMap();
+
+  } catch (error) {
+    console.error(error);
+    $('status').textContent = '❌ Greška: ' + error.message +
+      '. Provjeri Supabase ključ, tabelu i dozvole za čitanje.';
+  }
 }
 
 function renderAdventureMap() {
-    const map = $("adventureMap");
-    if (!map) return;
+  const map = $('adventureMap');
+  map.innerHTML = '';
 
-    map.innerHTML = "";
+  const worldSize = 4;
+  const worlds = [];
 
-    // Grupisanje postojećih tema u svjetove od po 4 teme.
-    const worldNames = [
-        { name: "Čarobna šuma", icon: "🌳", desc: "Započni svoju avanturu!" },
-        { name: "Ostrvo blaga", icon: "🏝️", desc: "Otkrij nove riječi!" },
-        { name: "Zmajeva planina", icon: "🐉", desc: "Postani majstor engleskog!" },
-        { name: "Svemirska stanica", icon: "🚀", desc: "Do zvijezda i novih znanja!" },
-        { name: "Ledena palača", icon: "🏰", desc: "Nastavi svoju pustolovinu!" }
-    ];
+  for (let i=0; i<lessons.length; i+=worldSize) {
+    worlds.push(lessons.slice(i,i+worldSize));
+  }
 
-    const worldSize = 4;
-    const worlds = [];
+  worlds.forEach((items,index) => {
+    const info = worldNames[index % worldNames.length];
+    const unlocked = index === 0 ||
+      worlds[index-1].every(l => completed.includes(l.id));
+    const finished = items.filter(l=>completed.includes(l.id)).length;
 
-    for (let i = 0; i < lessons.length; i += worldSize) {
-        worlds.push(lessons.slice(i, i + worldSize));
-    }
+    const card = document.createElement('section');
+    card.className = 'world-card' + (unlocked ? '' : ' locked');
 
-    worlds.forEach((worldLessons, worldIndex) => {
-        const info = worldNames[worldIndex % worldNames.length];
+    const title = document.createElement('div');
+    title.className = 'world-title';
+    title.innerHTML = `<span class="world-icon">${unlocked ? info.icon : '🔒'}</span>Svijet ${index+1}: ${info.name}`;
+    card.appendChild(title);
 
-        // Prvi svijet je otvoren.
-        // Svaki sljedeći traži završetak svih lekcija prethodnog svijeta.
-        const previousWorld = worldIndex > 0
-            ? worlds[worldIndex - 1]
-            : [];
+    const desc = document.createElement('p');
+    desc.textContent = unlocked ? info.desc : 'Završi prethodni svijet da ga otključaš.';
+    card.appendChild(desc);
 
-        const unlocked = worldIndex === 0 ||
-            previousWorld.every(lesson => completed.includes(lesson.id));
+    const count = document.createElement('small');
+    count.textContent = `Napredak: ${finished}/${items.length} lekcija`;
+    card.appendChild(count);
 
-        const finishedCount = worldLessons.filter(
-            lesson => completed.includes(lesson.id)
-        ).length;
+    const bar = document.createElement('div');
+    bar.className = 'progress';
+    const fill = document.createElement('div');
+    fill.className = 'progress-fill';
+    fill.style.width = (finished/items.length*100) + '%';
+    bar.appendChild(fill);
+    card.appendChild(bar);
 
-        const progress = worldLessons.length
-            ? Math.round(finishedCount / worldLessons.length * 100)
-            : 0;
-
-        const card = document.createElement("section");
-        card.className = "world-card " +
-            (unlocked ? "world-open" : "world-locked");
-
-        const heading = document.createElement("div");
-        heading.className = "world-heading";
-
-        const icon = document.createElement("span");
-        icon.className = "world-icon";
-        icon.textContent = unlocked ? info.icon : "🔒";
-
-        const title = document.createElement("span");
-        title.textContent = `Svijet ${worldIndex + 1}: ${info.name}`;
-
-        heading.append(icon, title);
-        card.appendChild(heading);
-
-        const description = document.createElement("p");
-        description.textContent = unlocked
-            ? info.desc
-            : "Završi prethodni svijet da ga otključaš.";
-        card.appendChild(description);
-
-        const progressLabel = document.createElement("small");
-        progressLabel.textContent =
-            `Napredak: ${finishedCount}/${worldLessons.length} lekcija`;
-        card.appendChild(progressLabel);
-
-        const progressBar = document.createElement("div");
-        progressBar.className = "world-progress";
-
-        const fill = document.createElement("div");
-        fill.className = "world-progress-fill";
-        fill.style.width = progress + "%";
-        progressBar.appendChild(fill);
-        card.appendChild(progressBar);
-
-        worldLessons.forEach(lesson => {
-            const done = completed.includes(lesson.id);
-            const mission = document.createElement("button");
-
-            mission.type = "button";
-            mission.className = "world-mission";
-            mission.disabled = !unlocked;
-
-            mission.textContent =
-                (done ? "✅ " : unlocked ? "⭐ " : "🔒 ") +
-                lesson.name + ` (${lesson.words.length} riječi)`;
-
-            mission.addEventListener("click", () => {
-                if (!unlocked) return;
-                openLesson(lesson.id);
-            });
-
-            card.appendChild(mission);
-        });
-
-        map.appendChild(card);
+    items.forEach(lesson => {
+      const button = document.createElement('button');
+      button.className = 'mission';
+      button.disabled = !unlocked;
+      button.textContent =
+        (completed.includes(lesson.id) ? '✅ ' : unlocked ? '⭐ ' : '🔒 ') +
+        lesson.name + ` (${lesson.words.length} riječi)`;
+      button.addEventListener('click',()=>openLesson(lesson.id));
+      card.appendChild(button);
     });
+
+    map.appendChild(card);
+  });
 }
 
 function openLesson(id) {
-    current = lessons.find(l => l.id === id);
-    if (!current) return;
-    $("lessonTitle").textContent = current.emoji + " " + current.name;
-    $("lessonIntro").textContent = current.intro;
-    $("words").innerHTML = current.words.map((w, i) => `
-        <div class="word">
-            <div><b>${w[0]}</b><br><span>${w[1]}</span></div>
-            <button class="sound" data-word="${i}">🔊 Slušaj</button>
-        </div>
-    `).join("");
-    $("words").querySelectorAll("[data-word]").forEach(b => {
-        b.addEventListener("click", () => speak(current.words[Number(b.dataset.word)][0]));
-    });
-    $("study").classList.remove("hidden");
-    $("quiz").classList.add("hidden");
-    $("study").scrollIntoView({ behavior:"smooth" });
-}
+  current = lessons.find(l=>l.id===id);
+  if (!current) return;
 
-function speak(w) {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    let v = new SpeechSynthesisUtterance(w);
-    v.lang = "en-GB"; v.rate = 0.8;
-    window.speechSynthesis.speak(v);
+  $('lessonTitle').textContent = current.emoji + ' ' + current.name;
+  $('lessonIntro').textContent = current.intro;
+
+  $('words').innerHTML = current.words.map((w,i)=>`
+    <div class="word">
+      <div><b>${escapeHtml(w[0])}</b><br>${escapeHtml(w[1])}</div>
+      <button class="secondary" data-word="${i}">🔊 Slušaj</button>
+    </div>
+  `).join('');
+
+  $('words').querySelectorAll('[data-word]').forEach(button => {
+    button.addEventListener('click',()=>{
+      speak(current.words[Number(button.dataset.word)][0]);
+    });
+  });
+
+  $('study').classList.remove('hidden');
+  $('quiz').classList.add('hidden');
+  $('study').scrollIntoView({behavior:'smooth'});
 }
 
 function startQuiz() {
-    if (!current) return;
-    questions = shuffle(current.words).map(w => ({en:w[0], bs:w[1], typing:false}))
-        .concat(shuffle(current.words).map(w => ({en:w[0], bs:w[1], typing:true})));
-    qIndex = 0; sessionScore = 0; waiting = false;
-    $("quiz").classList.remove("hidden");
-    $("study").classList.add("hidden");
-    showQuestion();
+  if (!current || !current.words.length) return;
+
+  questions = shuffle(current.words).map(w=>({
+    en:w[0],bs:w[1],typing:false
+  })).concat(shuffle(current.words).map(w=>({
+    en:w[0],bs:w[1],typing:true
+  })));
+
+  qIndex = 0;
+  sessionScore = 0;
+  waiting = false;
+
+  $('study').classList.add('hidden');
+  $('quiz').classList.remove('hidden');
+  showQuestion();
+  $('quiz').scrollIntoView({behavior:'smooth'});
 }
 
 function showQuestion() {
-    waiting = false;
-    $("feedback").textContent = "";
-    $("next").classList.add("hidden");
-    $("typedAnswer").value = "";
-    $("typedAnswer").disabled = false;
-    $("checkTyped").disabled = false;
-    let q = questions[qIndex];
-    if (!q.typing) {
-        $("question").textContent = `Pitanje ${qIndex + 1}/${questions.length}: Šta znači "${q.en}"?`;
-        $("typingArea").classList.add("hidden");
-        $("answers").classList.remove("hidden");
-        let wrong = shuffle(current.words.filter(w => w[1] !== q.bs).map(w => w[1])).slice(0, 3);
-        let choices = shuffle([q.bs, ...wrong]);
-        $("answers").innerHTML = choices.map((c, i) => `<button class="answer" data-answer="${i}">${c}</button>`).join("");
-        $("answers").querySelectorAll("[data-answer]").forEach((b, i) => {
-            b.addEventListener("click", () => checkAnswer(b, choices[i], q.bs));
-        });
-    } else {
-        $("question").textContent = `Pitanje ${qIndex + 1}/${questions.length}: Kako se kaže na engleskom?`;
-        $("answers").classList.add("hidden");
-        $("typingArea").classList.remove("hidden");
-        $("typingWord").textContent = q.bs;
-        $("typedAnswer").focus();
-    }
+  waiting = false;
+  pickedLetters = [];
+  $('feedback').textContent = '';
+  $('next').classList.add('hidden');
+  $('checkTyped').disabled = false;
+  $('clearLetters').disabled = false;
+
+  const q = questions[qIndex];
+
+  if (!q.typing) {
+    $('question').textContent =
+      `Pitanje ${qIndex+1}/${questions.length}: Šta znači "${q.en}"?`;
+
+    $('typingArea').classList.add('hidden');
+    $('answers').classList.remove('hidden');
+
+    const wrong = shuffle(current.words
+      .filter(w=>w[1]!==q.bs).map(w=>w[1])).slice(0,3);
+
+    const choices = shuffle([...new Set([q.bs,...wrong])]);
+
+    $('answers').innerHTML = choices.map((choice,i)=>
+      `<button class="answer" data-answer="${i}">${escapeHtml(choice)}</button>`
+    ).join('');
+
+    $('answers').querySelectorAll('[data-answer]').forEach((button,i)=>{
+      button.addEventListener('click',()=>{
+        checkAnswer(button,choices[i],q.bs);
+      });
+    });
+  } else {
+    $('question').textContent =
+      `Pitanje ${qIndex+1}/${questions.length}: Kako se kaže na engleskom?`;
+
+    $('answers').classList.add('hidden');
+    $('typingArea').classList.remove('hidden');
+    $('typingWord').textContent = q.bs;
+    renderLetters();
+  }
 }
 
-function checkAnswer(btn, choice, correct) {
-    if (waiting) return;
-    waiting = true;
-    document.querySelectorAll("#answers button").forEach(b => b.disabled = true);
-    if (choice === correct) {
-        btn.style.backgroundColor = "#d9fbe5";
-        $("feedback").style.color = "#168044";
-        $("feedback").textContent = "✅ Tačno! +10 bodova 🌟";
-        sessionScore++; points += 10;
-    } else {
-        btn.style.backgroundColor = "#ffe3e3";
-        $("feedback").style.color = "#c03939";
-        $("feedback").textContent = "❌ Tačan odgovor je: " + correct;
-    }
-    saveProgress();
-    $("next").classList.remove("hidden");
+function checkAnswer(button,choice,correct) {
+  if (waiting) return;
+  waiting = true;
+
+  $('answers').querySelectorAll('button').forEach(b=>b.disabled=true);
+
+  if (choice === correct) {
+    button.style.background = '#d9fbe5';
+    $('feedback').style.color = '#168044';
+    $('feedback').textContent = '✅ Tačno! +10 bodova 🌟';
+    sessionScore++;
+    points += 10;
+  } else {
+    $('feedback').style.color = '#c03939';
+    $('feedback').textContent = '❌ Tačan odgovor je: ' + correct;
+  }
+
+  saveProgress();
+  $('next').classList.remove('hidden');
+}
+
+function renderLetters() {
+  const answer = $('letterAnswer');
+  const bank = $('letterBank');
+  answer.innerHTML = '';
+  bank.innerHTML = '';
+
+  if (!pickedLetters.length) {
+    const hint = document.createElement('span');
+    hint.style.color = '#7a819c';
+    hint.textContent = 'Klikni slova ispod...';
+    answer.appendChild(hint);
+  }
+
+  pickedLetters.forEach((item,index)=>{
+    const button = document.createElement('button');
+    button.className = 'letter';
+    button.textContent = item.char;
+    button.title = 'Klikni da vratiš slovo';
+    button.addEventListener('click',()=>{
+      if (waiting) return;
+      pickedLetters.splice(index,1);
+      renderLetters();
+    });
+    answer.appendChild(button);
+  });
+
+  const target = questions[qIndex].en.toUpperCase().replace(/[^A-Z]/g,'');
+  const extras = shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))
+    .filter(c=>!target.includes(c))
+    .slice(0,Math.min(3,Math.max(0,10-target.length)));
+
+  const pool = shuffle([...target.split(''),...extras]);
+
+  pool.forEach((char,index)=>{
+    const button = document.createElement('button');
+    button.className = 'letter';
+    button.textContent = char;
+    button.disabled = pickedLetters.some(x=>x.index===index);
+
+    button.addEventListener('click',()=>{
+      if (waiting || button.disabled) return;
+      pickedLetters.push({char,index});
+      renderLetters();
+    });
+
+    bank.appendChild(button);
+  });
 }
 
 function checkTyped() {
-    if (waiting) return;
-    let ans = $("typedAnswer").value.trim();
-    if (!ans) return;
-    waiting = true;
-    $("typedAnswer").disabled = true;
-    $("checkTyped").disabled = true;
-    let correct = questions[qIndex].en;
-    if (ans.toLowerCase() === correct.toLowerCase()) {
-        $("feedback").style.color = "#168044";
-        $("feedback").textContent = "✅ Tačno! +10 bodova 🌟";
-        sessionScore++; points += 10;
-    } else {
-        $("feedback").style.color = "#c03939";
-        $("feedback").textContent = "❌ Tačan odgovor je: " + correct;
-    }
-    saveProgress();
-    $("next").classList.remove("hidden");
+  if (waiting) return;
+
+  const answer = pickedLetters.map(x=>x.char).join('');
+  const correct = questions[qIndex].en.toUpperCase().replace(/[^A-Z]/g,'');
+
+  if (!answer) {
+    $('feedback').style.color = '#c03939';
+    $('feedback').textContent = '👆 Prvo klikni slova da sastaviš riječ.';
+    return;
+  }
+
+  waiting = true;
+  $('checkTyped').disabled = true;
+  $('clearLetters').disabled = true;
+
+  if (answer === correct) {
+    $('feedback').style.color = '#168044';
+    $('feedback').textContent = '✅ Odlično! Tačno si složio/la riječ! +10 bodova 🌟';
+    sessionScore++;
+    points += 10;
+  } else {
+    $('feedback').style.color = '#c03939';
+    $('feedback').textContent = '❌ Tačan odgovor je: ' + questions[qIndex].en;
+  }
+
+  saveProgress();
+  $('next').classList.remove('hidden');
 }
 
-$("next").addEventListener("click", () => {
-    if (qIndex < questions.length - 1) {
-        qIndex++; showQuestion();
-    } else {
-        if (!completed.includes(current.id)) completed.push(current.id);
-        saveProgress();
-        $("question").textContent = "🎉 Završio/la si lekciju!";
-        $("answers").innerHTML = ""; $("typingArea").classList.add("hidden");
-        $("feedback").textContent = `Osvojio/la si ${sessionScore * 10} bodova!`;
-        $("next").classList.add("hidden");
-        render();
-    }
+$('next').addEventListener('click',()=>{
+  if (qIndex < questions.length-1) {
+    qIndex++;
+    showQuestion();
+    return;
+  }
+
+  if (!completed.includes(current.id)) completed.push(current.id);
+  saveProgress();
+
+  $('question').textContent = '🎉 Bravo! Završio/la si lekciju!';
+  $('answers').innerHTML = '';
+  $('typingArea').classList.add('hidden');
+  $('feedback').style.color = '#168044';
+  $('feedback').textContent = `Osvojeni bodovi u ovom kvizu: ${sessionScore*10} ⭐`;
+  $('next').classList.add('hidden');
+
+  renderAdventureMap();
 });
 
-$("startQuiz").addEventListener("click", startQuiz);
-$("wellDone").addEventListener("click", () => speak("Well done!"));
-$("checkTyped").addEventListener("click", checkTyped);
-$("clearLetters").addEventListener("click", () => {
-    if (waiting) return;
-    window.adventurePicked = [];
-    $("feedback").textContent = "";
-    renderAdventureLetters();
+$('startQuiz').addEventListener('click',startQuiz);
+$('checkTyped').addEventListener('click',checkTyped);
+
+$('clearLetters').addEventListener('click',()=>{
+  if (waiting) return;
+  pickedLetters = [];
+  $('feedback').textContent = '';
+  renderLetters();
 });
 
-$("hearWord").addEventListener("click", () => {
-    if (questions[qIndex]) speak(questions[qIndex].en);
-});    
-$("backHome").addEventListener("click", () => { $("study").classList.add("hidden"); $("quiz").classList.add("hidden"); window.scrollTo({top: 0, behavior: "smooth"}); });
-$("backFromQuiz").addEventListener("click", () => { $("quiz").classList.add("hidden"); $("study").classList.add("hidden"); window.scrollTo({top: 0, behavior: "smooth"}); });
+$('hearWord').addEventListener('click',()=>{
+  if (questions[qIndex]) speak(questions[qIndex].en);
+});
 
-const wizGreetings = [
-    {
-        bs: "Zdravo, pustolove! Ja sam Wiz. Hajde da učimo engleski!",
-        en: "Hello, adventurer! I am Wiz. Let's learn English!"
-    },
-    {
-        bs: "Svaka završena lekcija donosi te bliže novom svijetu!",
-        en: "Every completed lesson brings you closer to a new world!"
-    },
-    {
-        bs: "Klikni na otvorenu misiju i osvoji zvjezdice!",
-        en: "Choose an open mission and earn stars!"
-    },
-    {
-        bs: "Vjerujem u tebe! You can do it!",
-        en: "You can do it!"
-    }
+$('backHome').addEventListener('click',()=>{
+  $('study').classList.add('hidden');
+  $('quiz').classList.add('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+$('backFromQuiz').addEventListener('click',()=>{
+  $('quiz').classList.add('hidden');
+  $('study').classList.add('hidden');
+  renderAdventureMap();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+const greetings = [
+  {
+    bs:'Zdravo, pustolove! Ja sam Wiz. Hajde da učimo engleski!',
+    en:"Hello, adventurer! I am Wiz. Let's learn English!"
+  },
+  {
+    bs:'Svaka završena lekcija donosi te bliže novom svijetu!',
+    en:'Every completed lesson brings you closer to a new world!'
+  },
+  {
+    bs:'Klikni na otvorenu misiju i osvoji zvjezdice!',
+    en:'Choose an open mission and earn stars!'
+  },
+  {
+    bs:'Vjerujem u tebe! You can do it!',
+    en:'You can do it!'
+  }
 ];
 
-let wizGreetingIndex = 0;
+let greetingIndex = 0;
 
-$("wizTalk").addEventListener("click", () => {
-    const message = wizGreetings[wizGreetingIndex];
+$('wizTalk').addEventListener('click',()=>{
+  const greeting = greetings[greetingIndex % greetings.length];
+  greetingIndex++;
 
-    $("wizMessage").textContent = message.bs + " " + message.en;
-    speak(message.en);
+  $('wizMessage').innerHTML =
+    escapeHtml(greeting.bs) + '<br><i>' +
+    escapeHtml(greeting.en) + '</i>';
 
-    wizGreetingIndex =
-        (wizGreetingIndex + 1) % wizGreetings.length;
+  speak(greeting.en);
 });
 
-$("wizStart").addEventListener("click", () => {
-    $("adventureMap").scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-
-    $("wizMessage").textContent =
-        "Tvoja avantura počinje! Your adventure starts now!";
-
-    speak("Your adventure starts now!");
+$('wizStart').addEventListener('click',()=>{
+  $('adventureMap').scrollIntoView({behavior:'smooth'});
+  $('wizMessage').innerHTML =
+    'Izaberi misiju u prvom svijetu!<br><i>Choose a mission in the first world!</i>';
 });
 
-
-  
-// Pokretanje učitavanja iz baze
 loadLessonsFromSupabase();
 </script>
 </body>
